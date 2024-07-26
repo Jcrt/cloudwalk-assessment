@@ -15,11 +15,15 @@ Each package, constant, type and function inside the application have it's own c
 
 The pattern of documentation was gathered in [official Go Doc Comments page](https://tip.golang.org/doc/comment).
 
+### 🗃️ Backlog
+- UTs
+- Order the output of the reports because Go don't keep map's order
+- Create an option to the user can call both reports by command line using a kind of -t in command line argument
+
 ## 🕹️ About the game rules
 Here we will talk about some game rules stuff
 
 ### Edge Cases
-***
 1) When a player changes the name, supposely the log parser will not keep the correspndence between the name in the moment of the event and the aggregated result.
 For example, lets say that a player `Doguinho caramelo` entered in the game, killed someone and after got the name `dogão é mau`. In this case, all deaths will be counted as `dogão é mau`'s deaths.
 
