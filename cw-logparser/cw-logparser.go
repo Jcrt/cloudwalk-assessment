@@ -3,7 +3,6 @@
 package cw_logParser
 
 import (
-	cw_logreader "cloudwalk-assessment/cw-logReader"
 	quake3 "cloudwalk-assessment/quake3"
 	"strconv"
 	"strings"
@@ -38,10 +37,9 @@ const(
 )
 
 // ParseLog is the function that retrieve log info and parse it to log parser types
-func ParseLog() []Game {
+func ParseLog(logString string) []Game {
 	games := make([]Game, 0)
-	fileContent := cw_logreader.ReadLog()
-	lines := strings.SplitN(fileContent, "\n", -1)
+	lines := strings.SplitN(logString, "\n", -1)
 
 	for _, line := range lines{
 		//TODO: Use some better way to compare keywords as switch extracting keywords with regex maybe
