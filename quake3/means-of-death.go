@@ -1,7 +1,8 @@
 package quake3
 
+type MeanOfDeath int
 const (
-  MOD_UNKNOWN = iota
+  MOD_UNKNOWN MeanOfDeath = iota
   MOD_SHOTGUN 
   MOD_GAUNTLET 
   MOD_MACHINEGUN 

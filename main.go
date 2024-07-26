@@ -1,16 +1,13 @@
 package main
 
 import (
-	cw_logreader "cloudwalk-assessment/cw-logreader"
-	quake3 "cloudwalk-assessment/quake3"
+	jsonParser "cloudwalk-assessment/cw-jsonParser"
+	cw_logParser "cloudwalk-assessment/cw-logparser"
 	"fmt"
 )
 
-const filepath string = "assets\\qgames.log.txt";
 
 func main() {
-
-	fileContent := cw_logreader.ReadLogFile(filepath)
-	fmt.Println(quake3.MOD_BFG)
-	fmt.Println(fileContent)
+	games := cw_logParser.ParseLog()
+	fmt.Println(jsonParser.Parse2Json(games))
 }
