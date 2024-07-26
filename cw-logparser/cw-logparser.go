@@ -1,7 +1,7 @@
 package cw_logParser
 
 import (
-	cw_logreader "cloudwalk-assessment/cw-logreader"
+	cw_logreader "cloudwalk-assessment/cw-logReader"
 	quake3 "cloudwalk-assessment/quake3"
 	"strconv"
 	"strings"
@@ -12,15 +12,16 @@ const filepath string = "assets\\qgames.log.txt";
 type Game struct {
 	Count int
 	Players map[int]Player
+	Kills []Kill
 }
 
 type Player struct {
 	Name string 
-	Deaths []Death
 }
 
-type Death struct {
+type Kill struct {
 	KillerId int
+	KilledId int
 	MeanOfDeath quake3.MeanOfDeath
 }
 
@@ -48,12 +49,8 @@ func ParseLog() []Game {
 			player, playerId := parsePlayerLine(line)
 			games[len(games)-1].Players[playerId] = player
 		} else if(searchingKeywordExists(line, SK_Kill)) {
-			kill, killedId := parseKillLine(line)
-
-			if entry, ok := games[len(games)-1].Players[killedId]; ok{
-				entry.Deaths = append(entry.Deaths, kill)
-				games[len(games)-1].Players[killedId] = entry
-			}
+			kill := parseKillLine(line)
+			games[len(games)-1].Kills = append(games[len(games)-1].Kills, kill)
 		}
 	}
 
@@ -72,14 +69,13 @@ func parsePlayerLine(line string) (Player, int) {
 	playerIdInt, _ := strconv.Atoi(strings.TrimSpace(playerId))
 
 	player := Player {
-		Name: playerName, 
-		Deaths: make([]Death, 0),
+		Name: playerName,
 	}
 
 	return player, playerIdInt;	
 }
 
-func parseKillLine(line string) (Death, int) {
+func parseKillLine(line string) Kill {
 	_, after, _ := strings.Cut(line, string(SK_Kill))
 	before, _, _ := strings.Cut(after, ":")
 	infos := strings.Split(strings.TrimSpace(before), " ")
@@ -88,10 +84,11 @@ func parseKillLine(line string) (Death, int) {
 	killedId, _ := strconv.Atoi(infos[1])
 	meanOfDeath, _ := strconv.Atoi(infos[2])
 
-	kill := Death{
+	kill := Kill{
 		KillerId: killerId,
 		MeanOfDeath: quake3.MeanOfDeath(meanOfDeath),
+		KilledId: killedId,
 	}
 
-	return kill, killedId;
+	return kill;
 }
