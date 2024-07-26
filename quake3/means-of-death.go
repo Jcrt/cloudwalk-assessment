@@ -1,5 +1,8 @@
+// Package quake3 implements all artifacts directly related to the Quake 3 game
+// It's being used to separate all Quake 3 domain in this single package
 package quake3
 
+// A type and constant that defines different ways that a player can die
 type MeanOfDeath int
 const (
   MOD_UNKNOWN MeanOfDeath = iota
