@@ -3,6 +3,7 @@
 package cw_reporter
 
 import (
+	cw_error "cloudwalk-assessment/cw-error"
 	cw_logAgnalyzer "cloudwalk-assessment/cw-logAnalyzer"
 	cw_logParser "cloudwalk-assessment/cw-logParser"
 	cw_logReader "cloudwalk-assessment/cw-logReader"
@@ -13,19 +14,25 @@ import (
 // Func GetGameReport generates the basic game report as requested in CloudWalk Assessment item 3.2
 //
 // Returns a map where the key is the match number and the value is the match info
-func GetGameReport() orderedMap.OrderedMap{
-	stringLog := cw_logReader.GetLog()
-	games := cw_logParser.ParseLog(stringLog)
+func GetGameReport() (orderedMap.OrderedMap, error) {
+	stringLog, readerErr := cw_logReader.GetLog()
+	games, parserErr := cw_logParser.ParseLog(stringLog)
+
 	analyzedGames := cw_logAgnalyzer.GetMatchesInfo(games)
-	return analyzedGames
+
+	var aggregatedErrors = cw_error.BuildErrorOutput(readerErr, parserErr)
+	return analyzedGames, aggregatedErrors
 }
 
 // Func GetGameReport generates the MOD game report as requested in CloudWalk Assessment item 3.3
 //
 // Returns a map where the key is the MOD type and the value is the count of times that happened
-func GetMODGameReport() orderedMap.OrderedMap{
-	stringLog := cw_logReader.GetLog()
-	games := cw_logParser.ParseLog(stringLog)
+func GetMODGameReport() (orderedMap.OrderedMap, error){
+	stringLog, readerErr := cw_logReader.GetLog()
+	games, parserErr := cw_logParser.ParseLog(stringLog)
+
 	analyzedGames := cw_logAgnalyzer.GetMODMatchesInfo(games)
-	return analyzedGames
+
+	var aggregatedErrors = cw_error.BuildErrorOutput(readerErr, parserErr)
+	return analyzedGames, aggregatedErrors
 }

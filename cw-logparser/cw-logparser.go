@@ -4,6 +4,8 @@ package cw_logParser
 
 import (
 	quake3 "cloudwalk-assessment/quake3"
+	"fmt"
+	"log"
 	"regexp"
 	"strconv"
 	"strings"
@@ -41,35 +43,61 @@ const(
 )
 
 // ParseLog is the function that retrieve log info and parse it to log parser types
-func ParseLog(logString string) []Match {
+func ParseLog(logString string) ([]Match, error) {
 	matches := make([]Match, 0)
 	lines := strings.SplitN(logString, "\n", -1)
 
-	for _, line := range lines{
-		hasKeyword, keyword := findKeyword(line)
-		if(hasKeyword){
-				switch op := keyword; op {
-					case string(SK_InitGame): {
-						currentMatch := Match{
-							Order: len(matches) + 1,
-							Players: make(map[int]Player, 0),
+	isValid, err := validate(logString)
+
+	if(isValid) {
+		for _, line := range lines{
+			hasKeyword, keyword := findKeyword(line)
+			if(hasKeyword){
+					switch op := keyword; op {
+						case string(SK_InitGame): {
+							currentMatch := Match{
+								Order: len(matches) + 1,
+								Players: make(map[int]Player, 0),
+							}
+							matches = append(matches, currentMatch)
 						}
-						matches = append(matches, currentMatch)
+						case string(SK_ClientUserinfoChanged): {
+							if(len(matches) > 0){
+								player, playerId := parsePlayerLine(line)
+								matches[len(matches)-1].Players[playerId] = player
+							}
+						}
+						case string(SK_Kill): {
+							if(len(matches) > 0){
+								kill := parseKillLine(line)
+								matches[len(matches)-1].Kills = append(matches[len(matches)-1].Kills, kill)
+							}
+						}
+						default: continue; 
 					}
-					case string(SK_ClientUserinfoChanged): {
-						player, playerId := parsePlayerLine(line)
-						matches[len(matches)-1].Players[playerId] = player
-					}
-					case string(SK_Kill): {
-						kill := parseKillLine(line)
-						matches[len(matches)-1].Kills = append(matches[len(matches)-1].Kills, kill)
-					}
-					default: continue; 
-				}
+			}
 		}
+	} else {
+		err = fmt.Errorf("the parse process failed. reason: %s", err.Error())
+		log.Output(1, err.Error())
 	}
 
-	return matches
+	return matches, err
+}
+
+//Func validate makes a basic input validation
+// The parameter logString receives the string containing log
+//
+// Returns a bool sinalizing if input is valid or not and error variable
+func validate(logString string) (bool, error) {
+	var err error
+
+	if(len(logString) == 0){
+		err = fmt.Errorf("log content is empty")
+		return false, err
+	}
+		
+	return true, err
 }
 
 // Func findKeyword searches inside a log line if words of interest whether present or not
