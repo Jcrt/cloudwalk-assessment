@@ -34,7 +34,6 @@ func GetApplicationMode() (applicationMode, error) {
 				case "-t": {
 					if(len(os.Args) > 2) {
 						secondArg := os.Args[2]
-						fmt.Println(secondArg)
 
 						if(secondArg == string(MODE_GAME_REPORT)){
 							mode = MODE_GAME_REPORT
