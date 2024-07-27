@@ -4,9 +4,13 @@ package cw_logParser
 
 import (
 	quake3 "cloudwalk-assessment/quake3"
+	"regexp"
 	"strconv"
 	"strings"
 )
+
+// keywordRegex will be instantiated only here to improve performance
+var keywordRegex = regexp.MustCompile(`(?<prefix>\d{1,2}:\d{2} )(?<keyword>[^:]*:)`)
 
 // Match is the struct that defines the useful information about each match in the log
 type Match struct {
@@ -42,33 +46,47 @@ func ParseLog(logString string) []Match {
 	lines := strings.SplitN(logString, "\n", -1)
 
 	for _, line := range lines{
-		//TODO: Use some better way to compare keywords as switch extracting keywords with regex maybe
-		if(searchingKeywordExists(line, SK_InitGame)){
-			currentMatch := Match{
-				Order: len(matches) + 1,
-				Players: make(map[int]Player, 0),
-			}
-			matches = append(matches, currentMatch)
-		} else if(searchingKeywordExists(line, SK_ClientUserinfoChanged)){
-			player, playerId := parsePlayerLine(line)
-			matches[len(matches)-1].Players[playerId] = player
-		} else if(searchingKeywordExists(line, SK_Kill)) {
-			kill := parseKillLine(line)
-			matches[len(matches)-1].Kills = append(matches[len(matches)-1].Kills, kill)
+		hasKeyword, keyword := findKeyword(line)
+		if(hasKeyword){
+				switch op := keyword; op {
+					case string(SK_InitGame): {
+						currentMatch := Match{
+							Order: len(matches) + 1,
+							Players: make(map[int]Player, 0),
+						}
+						matches = append(matches, currentMatch)
+					}
+					case string(SK_ClientUserinfoChanged): {
+						player, playerId := parsePlayerLine(line)
+						matches[len(matches)-1].Players[playerId] = player
+					}
+					case string(SK_Kill): {
+						kill := parseKillLine(line)
+						matches[len(matches)-1].Kills = append(matches[len(matches)-1].Kills, kill)
+					}
+					default: continue; 
+				}
 		}
 	}
 
 	return matches
 }
 
-// Func searchingKeywrodExists searches inside a log line if words of interest whether present or not
+// Func findKeyword searches inside a log line if words of interest whether present or not
+// Regexp here wouldn't be the most efficient process to find keywords, but for this assessment 
+// I've decided that should be interesting show the usage of regex 😃
 // The parameter line receives a log line
-// The parameter searchingKeyword is the word of interest that's mapped in searchingKeywords enum
 //
-// Returns true if word of interest was found, otherwise false
-func searchingKeywordExists(line string, searchingKeyword searchingKeywords) bool {
-	contains := strings.Contains(line, string(searchingKeyword))
-	return contains
+// Returns true if word of interest was found and the keyword, otherwise false and empty string
+func findKeyword(line string) (bool, string) {
+	match := keywordRegex.FindStringSubmatch(line)
+	contains := false
+	keyword := ""
+	if(len(match) > 1 && keywordRegex.SubexpIndex("keyword") > -1){
+		contains = true
+		keyword = match[keywordRegex.SubexpIndex("keyword")]
+	} 
+	return contains, keyword
 }
 
 // Func parsePlayerLine is used to parse a log line that defines a player to the Player struct
