@@ -7,6 +7,7 @@ import (
 	"cloudwalk-assessment/quake3"
 	"strconv"
 
+	orderedMap "github.com/iancoleman/orderedmap"
 	funk "github.com/thoas/go-funk"
 )
 
@@ -29,8 +30,9 @@ type MODMatchInfo struct {
 // The parameter games receives an array of game log parser object
 //
 // Returns a map containing all matches
-func GetMatchesInfo(matches []cw_logParser.Match) map[string]MatchInfo {
-	matchesInfo := make(map[string]MatchInfo, 0)
+func GetMatchesInfo(matches []cw_logParser.Match) orderedMap.OrderedMap {
+	matchesInfo := orderedMap.New()
+
 	for index, match := range matches {
 		
 		currentMatch := MatchInfo {
@@ -39,25 +41,25 @@ func GetMatchesInfo(matches []cw_logParser.Match) map[string]MatchInfo {
 			Kills: getKillsByPlayer(match),
 		}
 		index := getMatchIdentifier(index)
-		matchesInfo[index] = currentMatch
+		matchesInfo.Set(index, currentMatch)
 	}
 
-	return matchesInfo;
+	return *matchesInfo;
 }
 
 // Func GetMODMatchesInfo build a map for each mean of death that occurred in logs, group it and count it
 // The parameter games receives an array of game log parser object
 //
 // Returns a map containing all means of death grouped and counted
-func GetMODMatchesInfo(games []cw_logParser.Match) map[string]MODMatchInfo {
-	modMatchesInfo := make(map[string]MODMatchInfo)
+func GetMODMatchesInfo(games []cw_logParser.Match) orderedMap.OrderedMap {
+	modMatchesInfo := orderedMap.New()
 	for index, match := range games {
 		currentMODMatch := MODMatchInfo {
 			KillsByMeans: getKillsByMean(match.Kills),
 		}
-		modMatchesInfo[getMatchIdentifier(index)] = currentMODMatch
+		modMatchesInfo.Set(getMatchIdentifier(index), currentMODMatch)
 	}	
-	return modMatchesInfo
+	return *modMatchesInfo
 }
 
 func getMatchIdentifier(matchNumber int) string {
