@@ -13,7 +13,9 @@ const (
 	MODE_HELP applicationMode = "help"
 )
 
-
+// Func GetApplicationMode shows a menu to the user can input arguments in the program execution
+//
+// Returns applicationMode that defines which type of report will be generated and error
 func GetApplicationMode() (applicationMode, error) {
 	var mode applicationMode
 	var err error = nil

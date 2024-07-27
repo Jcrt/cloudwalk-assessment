@@ -6,16 +6,16 @@ Here we will talk about some code stuff
 
 ### Run
 In order to run this code, following the steps above: 
-- Navigate to root folder
-- run `go run cw-assessment.go`
+- Navigate to root folder 
 
-The application can be runned using two kind of arguments
+The application can be runned using these argument options:
 - `go run cw-assessment.go help` will provide all other acceptable arguments available
 - `go run cw-assessment.go -t <option>` will provide two different report types based on the `<option>`. The available options are: 
    - **game**: Will provide the expected output in [topic 3.2 of the assessment](https://gist.github.com/cloudwalk-tests/704a555a0fe475ae0284ad9088e203f1#32-report).
    - **mod**: Will provide the expected output in [topic 3.3 of the assessment](https://gist.github.com/cloudwalk-tests/704a555a0fe475ae0284ad9088e203f1#32-report).
+- `go run cw-assessment.go` will set automatically the report type to **game**.
 
-### Packages
+### Packages used
 - [go-funk](https://github.com/thoas/go-funk) package was used become collections more flexible with aggregation, slicing and search operations.
 - [orderedmap](https://github.com/iancoleman/orderedmap) package was used to achieve map key order maintenance, since with the default Go map structure, `json.Marshall()` couldn't keep it.
 
@@ -25,8 +25,7 @@ Each package, constant, type and function inside the application have it's own c
 The pattern of documentation was gathered in [official Go Doc Comments page](https://tip.golang.org/doc/comment).
 
 ### 🗃️ Backlog
-- UTs
-- Validate inputs
+- **Unit Tests**: Due the time limit for this exercise, I couldn't do more than create the empty ut's files. I understand the great importance of this phase of development process and even know that there is some design methods that starts from it (TDD), and in a normal routine it would be done and probably with an reasonably threshold about 80% of coverage. I have splitted, as well, the application in several packages with reduce number of lines to become this task as smoothly as it could be.
 
 ## 🕹️ About the game rules
 Here we will talk about some game rules stuff
