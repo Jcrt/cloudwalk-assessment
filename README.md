@@ -5,8 +5,7 @@ Thanks for allow me to make part of CloudWalk Assessment!
 Here we will talk about some code stuff
 
 ### Run
-In order to run this code, following the steps above: 
-- Navigate to root folder 
+The application can be runned from the root path of the project, that's `cloudwalk-assessment` folder.
 
 The application can be runned using these argument options:
 - `go run cw-assessment.go help` will provide all other acceptable arguments available
@@ -14,6 +13,8 @@ The application can be runned using these argument options:
    - **game**: Will provide the expected output in [topic 3.2 of the assessment](https://gist.github.com/cloudwalk-tests/704a555a0fe475ae0284ad9088e203f1#32-report).
    - **mod**: Will provide the expected output in [topic 3.3 of the assessment](https://gist.github.com/cloudwalk-tests/704a555a0fe475ae0284ad9088e203f1#32-report).
 - `go run cw-assessment.go` will set automatically the report type to **game**.
+
+There is no configuration file to provide file path, so I added it inside `Assets` folder. If was necessary change the file name and file path, it can be achieved accessing `/cw-logReader/cw-logReader.go:11` and changing the path there.
 
 ### Packages used
 - [go-funk](https://github.com/thoas/go-funk) package was used become collections more flexible with aggregation, slicing and search operations.
