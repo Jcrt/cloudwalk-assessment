@@ -5,7 +5,6 @@ package cw_logAnalyzer
 import (
 	cw_logParser "cloudwalk-assessment/cw-logParser"
 	"cloudwalk-assessment/quake3"
-	"fmt"
 	"strconv"
 
 	funk "github.com/thoas/go-funk"
@@ -14,56 +13,55 @@ import (
 // Defines the <world> code in the Kill logs
 const worldKillerId int = 1022
 
-// GameInfo struct defines all information relative to the Game in analysis aspect
-type GameInfo struct {
+// MatchInfo struct defines all information relative to the Game in analysis aspect
+type MatchInfo struct {
 	TotalKills int
 	Players []string
 	Kills map[string]int
 }
 
-// MODGameInfo struct defines a map of all deaths occurred during the game and group it providing a counter of each Mean of Death
-type MODGameInfo struct {
+// MODMatchInfo struct defines a map of all deaths occurred during the game and group it providing a counter of each Mean of Death
+type MODMatchInfo struct {
 	KillsByMeans map[string]int
 }
 
-// Func GetGamesInfo build a map containing all matches and it's relevant information
+// Func GetMatchesInfo build a map containing all matches and it's relevant information
 // The parameter games receives an array of game log parser object
 //
 // Returns a map containing all matches
-func GetGamesInfo(games []cw_logParser.Game) map[string]GameInfo {
-	gamesInfo := make(map[string]GameInfo, 0)
-	for index, game := range games {
+func GetMatchesInfo(matches []cw_logParser.Match) map[string]MatchInfo {
+	matchesInfo := make(map[string]MatchInfo, 0)
+	for index, match := range matches {
 		
-		game := GameInfo {
-			Players: getPlayerNames(game.Players),
-			TotalKills: getTotalKills(game.Kills),
-			Kills: getKillsByPlayer(game),
+		currentMatch := MatchInfo {
+			Players: getPlayerNames(match.Players),
+			TotalKills: getTotalKills(match.Kills),
+			Kills: getKillsByPlayer(match),
 		}
-		index := getGameNumber(index)
-		fmt.Println(index)
-		gamesInfo[index] = game
+		index := getMatchIdentifier(index)
+		matchesInfo[index] = currentMatch
 	}
 
-	return gamesInfo;
+	return matchesInfo;
 }
 
-// Func GetMODGamesInfo build a map for each mean of death that occurred in logs, group it and count it
+// Func GetMODMatchesInfo build a map for each mean of death that occurred in logs, group it and count it
 // The parameter games receives an array of game log parser object
 //
 // Returns a map containing all means of death grouped and counted
-func GetMODGamesInfo(games []cw_logParser.Game) map[string]MODGameInfo {
-	modGamesInfo := make(map[string]MODGameInfo)
-	for index, game := range games {
-		modGame := MODGameInfo {
-			KillsByMeans: getKillsByMean(game.Kills),
+func GetMODMatchesInfo(games []cw_logParser.Match) map[string]MODMatchInfo {
+	modMatchesInfo := make(map[string]MODMatchInfo)
+	for index, match := range games {
+		currentMODMatch := MODMatchInfo {
+			KillsByMeans: getKillsByMean(match.Kills),
 		}
-		modGamesInfo[getGameNumber(index)] = modGame
+		modMatchesInfo[getMatchIdentifier(index)] = currentMODMatch
 	}	
-	return modGamesInfo
+	return modMatchesInfo
 }
 
-func getGameNumber(gameNumber int) string {
-	return "game_"+ strconv.Itoa(gameNumber + 1)
+func getMatchIdentifier(matchNumber int) string {
+	return "game_"+ strconv.Itoa(matchNumber + 1)
 }
 
 // Func getKillsByMean generates a map containing all means of death that occurred during a match
@@ -71,28 +69,28 @@ func getGameNumber(gameNumber int) string {
 //
 // Returns a map containing as key the name of mean of death and as value the amount of time that it occurs
 func getKillsByMean(kills []cw_logParser.Kill) map[string]int {
-	killsByMeant := make(map[string]int)
+	killsByMean := make(map[string]int)
 
 	for _, kill := range kills {
 		meanOfDeathName := quake3.MeanOfDeath(kill.MeanOfDeath).String()
 		
-		if entry, ok := killsByMeant[meanOfDeathName]; ok {
+		if entry, ok := killsByMean[meanOfDeathName]; ok {
 			entry++
-			killsByMeant[meanOfDeathName] = entry
+			killsByMean[meanOfDeathName] = entry
 		} else {
-			killsByMeant[meanOfDeathName] = 1
+			killsByMean[meanOfDeathName] = 1
 		}
 	}
 
-	return killsByMeant;
+	return killsByMean;
 }
 
 // Func getPlayerNames generates a string array containing all player names that have entered during a match
 // The parameter gamePlayers receive a map of Player gathered from logs
 //
 // Returns a string array containing all player names at the end of the match
-func getPlayerNames(gamePlayers map[int]cw_logParser.Player) []string {
-		players := funk.Values(gamePlayers).([]cw_logParser.Player)
+func getPlayerNames(matchPlayers map[int]cw_logParser.Player) []string {
+		players := funk.Values(matchPlayers).([]cw_logParser.Player)
 		playerNames := funk.Get(players, "Name").([]string)
 		return playerNames;
 }
@@ -101,8 +99,8 @@ func getPlayerNames(gamePlayers map[int]cw_logParser.Player) []string {
 // The parameter gameKills receives a list of Kill and count it
 //
 // Returns an int with the total amount of kills occurred in the match
-func getTotalKills(gameKills []cw_logParser.Kill) int{
-	return len(gameKills)
+func getTotalKills(matchKills []cw_logParser.Kill) int{
+	return len(matchKills)
 }
 
 // Func getKillsByPlayer groups all kills by player and count it
@@ -110,21 +108,21 @@ func getTotalKills(gameKills []cw_logParser.Kill) int{
 // The parameter game is the Game struct
 //
 // Returns a map where the key is the mean of kill and the value is an int as a counter of occurrences
-func getKillsByPlayer(game cw_logParser.Game) map[string]int {
+func getKillsByPlayer(match cw_logParser.Match) map[string]int {
 	killsByPlayer := make(map[string]int, 0)
 
-	for _, player := range game.Players {
+	for _, player := range match.Players {
 		killsByPlayer[player.Name] = 0
 	}
 
-	for _, kill := range game.Kills {
-		playerName := game.Players[kill.KillerId].Name
+	for _, kill := range match.Kills {
+		playerName := match.Players[kill.KillerId].Name
 
 		if value, ok := killsByPlayer[playerName]; ok{
 			value++;
 			killsByPlayer[playerName] = value
 		} else if kill.KillerId == worldKillerId {
-			killedPlayer := game.Players[kill.KilledId].Name
+			killedPlayer := match.Players[kill.KilledId].Name
 			killScore := killsByPlayer[killedPlayer]
 			killScore--
 			killsByPlayer[killedPlayer] = killScore

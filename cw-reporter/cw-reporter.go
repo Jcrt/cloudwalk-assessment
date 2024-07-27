@@ -11,19 +11,19 @@ import (
 // Func GetGameReport generates the basic game report as requested in CloudWalk Assessment item 3.2
 //
 // Returns a map where the key is the match number and the value is the match info
-func GetGameReport() map[string]cw_logAgnalyzer.GameInfo{
+func GetGameReport() map[string]cw_logAgnalyzer.MatchInfo{
 	stringLog := cw_logReader.GetLog()
 	games := cw_logParser.ParseLog(stringLog)
-	analyzedGames := cw_logAgnalyzer.GetGamesInfo(games)
+	analyzedGames := cw_logAgnalyzer.GetMatchesInfo(games)
 	return analyzedGames
 }
 
 // Func GetGameReport generates the MOD game report as requested in CloudWalk Assessment item 3.3
 //
 // Returns a map where the key is the MOD type and the value is the count of times that happened
-func GetMODGameReport() map[string]cw_logAgnalyzer.MODGameInfo{
+func GetMODGameReport() map[string]cw_logAgnalyzer.MODMatchInfo{
 	stringLog := cw_logReader.GetLog()
 	games := cw_logParser.ParseLog(stringLog)
-	analyzedGames := cw_logAgnalyzer.GetMODGamesInfo(games)
+	analyzedGames := cw_logAgnalyzer.GetMODMatchesInfo(games)
 	return analyzedGames
 }

@@ -8,8 +8,8 @@ import (
 	"strings"
 )
 
-// Game is the struct that defines the useful information about each match in the log
-type Game struct {
+// Match is the struct that defines the useful information about each match in the log
+type Match struct {
 	Order int
 	Players map[int]Player
 	Kills []Kill
@@ -37,28 +37,28 @@ const(
 )
 
 // ParseLog is the function that retrieve log info and parse it to log parser types
-func ParseLog(logString string) []Game {
-	games := make([]Game, 0)
+func ParseLog(logString string) []Match {
+	matches := make([]Match, 0)
 	lines := strings.SplitN(logString, "\n", -1)
 
 	for _, line := range lines{
 		//TODO: Use some better way to compare keywords as switch extracting keywords with regex maybe
 		if(searchingKeywordExists(line, SK_InitGame)){
-			currentGame := Game{
-				Order: len(games) + 1,
+			currentMatch := Match{
+				Order: len(matches) + 1,
 				Players: make(map[int]Player, 0),
 			}
-			games = append(games, currentGame)
+			matches = append(matches, currentMatch)
 		} else if(searchingKeywordExists(line, SK_ClientUserinfoChanged)){
 			player, playerId := parsePlayerLine(line)
-			games[len(games)-1].Players[playerId] = player
+			matches[len(matches)-1].Players[playerId] = player
 		} else if(searchingKeywordExists(line, SK_Kill)) {
 			kill := parseKillLine(line)
-			games[len(games)-1].Kills = append(games[len(games)-1].Kills, kill)
+			matches[len(matches)-1].Kills = append(matches[len(matches)-1].Kills, kill)
 		}
 	}
 
-	return games
+	return matches
 }
 
 // Func searchingKeywrodExists searches inside a log line if words of interest whether present or not
