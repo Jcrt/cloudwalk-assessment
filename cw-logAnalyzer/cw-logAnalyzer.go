@@ -18,7 +18,8 @@ const worldKillerId int = 1022
 type MatchInfo struct {
 	TotalKills int
 	Players []string
-	Kills map[string]int
+	Kills orderedMap.OrderedMap
+	Ranking orderedMap.OrderedMap
 }
 
 // MODMatchInfo struct defines a map of all deaths occurred during the game and group it providing a counter of each Mean of Death
@@ -29,16 +30,17 @@ type MODMatchInfo struct {
 // Func GetMatchesInfo build a map containing all matches and it's relevant information
 // The parameter games receives an array of game log parser object
 //
-// Returns a map containing all matches
+// Returns an OrderedMap containing all matches
 func GetMatchesInfo(matches []cw_logParser.Match) orderedMap.OrderedMap {
 	matchesInfo := orderedMap.New()
 
 	for index, match := range matches {
-		
+		kills := getKillsByPlayer(match)
 		currentMatch := MatchInfo {
 			Players: getPlayerNames(match.Players),
 			TotalKills: getTotalKills(match.Kills),
-			Kills: getKillsByPlayer(match),
+			Kills: kills,
+			Ranking: getRankingByKills(kills),
 		}
 		index := getMatchIdentifier(index)
 		matchesInfo.Set(index, currentMatch)
@@ -47,10 +49,39 @@ func GetMatchesInfo(matches []cw_logParser.Match) orderedMap.OrderedMap {
 	return *matchesInfo;
 }
 
+// Func getRankingByKills creates a copy of kills orderedMap and with it's data creates a new ranking list
+// based on the kills list
+// The parameter kills is an orderedMap containing players and amount of kills unordered
+// Returns a new orderedList containing the ranking
+
+// OBS: In terms of performance, it's not good because I'm recreating a list and doubling the memory consumption
+// I only did it to clearly separate the concerns of the functions, but I could do this in one function that would
+// return both kills ordered and ranking 
+func getRankingByKills(kills orderedMap.OrderedMap) orderedMap.OrderedMap {
+
+	rankedPlayers := orderedMap.New()
+	killCopy := orderedMap.New()
+
+	for _, kill := range kills.Keys() {
+		value, _ := kills.Get(kill)
+		killCopy.Set(kill, value)
+	}
+
+	killCopy.Sort(func(a *orderedMap.Pair, b *orderedMap.Pair) bool{
+		return a.Value().(int) > b.Value().(int)
+	})
+
+	for index, rankedPlayer := range killCopy.Keys() {
+		rankedPlayers.Set(strconv.Itoa(index + 1), rankedPlayer)
+	}
+
+	return *rankedPlayers
+}
+
 // Func GetMODMatchesInfo build a map for each mean of death that occurred in logs, group it and count it
 // The parameter games receives an array of game log parser object
 //
-// Returns a map containing all means of death grouped and counted
+// Returns an OrderedMap containing all means of death grouped and counted
 func GetMODMatchesInfo(games []cw_logParser.Match) orderedMap.OrderedMap {
 	modMatchesInfo := orderedMap.New()
 	for index, match := range games {
@@ -109,27 +140,29 @@ func getTotalKills(matchKills []cw_logParser.Kill) int{
 // If a player was killed by the <world>, it's scored is decreased by 1 every time that it happened
 // The parameter game is the Game struct
 //
-// Returns a map where the key is the mean of kill and the value is an int as a counter of occurrences
-func getKillsByPlayer(match cw_logParser.Match) map[string]int {
-	killsByPlayer := make(map[string]int, 0)
+// Returns an OrderedMap where the key is the mean of kill and the value is an int as a counter of occurrences
+func getKillsByPlayer(match cw_logParser.Match) orderedMap.OrderedMap {
+	killsByPlayer := orderedMap.New()
 
 	for _, player := range match.Players {
-		killsByPlayer[player.Name] = 0
+		killsByPlayer.Set(player.Name, 0)
 	}
 
 	for _, kill := range match.Kills {
 		playerName := match.Players[kill.KillerId].Name
 
-		if value, ok := killsByPlayer[playerName]; ok{
-			value++;
-			killsByPlayer[playerName] = value
+		if value, ok := killsByPlayer.Get(playerName); ok{
+			intValue := value.(int)
+			intValue++;
+			killsByPlayer.Set(playerName, intValue)
 		} else if kill.KillerId == worldKillerId {
 			killedPlayer := match.Players[kill.KilledId].Name
-			killScore := killsByPlayer[killedPlayer]
-			killScore--
-			killsByPlayer[killedPlayer] = killScore
+			killScore, _ := killsByPlayer.Get(killedPlayer)
+			intKillScore := killScore.(int)
+			intKillScore--
+			killsByPlayer.Set(killedPlayer, intKillScore)
 		}
 	}
 
-	return killsByPlayer
+	return *killsByPlayer
 }
