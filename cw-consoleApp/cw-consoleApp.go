@@ -26,7 +26,7 @@ type ConsoleApp struct {
 // Func GetApplicationMode shows a menu to the user can input arguments in the program execution
 //
 // Returns applicationMode that defines which type of report will be generated and error
-func (consoleApp ConsoleApp) GetApplicationMode() (applicationMode, error) {
+func (consoleApp *ConsoleApp) GetApplicationMode() (applicationMode, error) {
 	var mode applicationMode
 	var err error = nil
 
