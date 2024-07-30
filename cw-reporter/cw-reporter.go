@@ -11,28 +11,79 @@ import (
 	orderedMap "github.com/iancoleman/orderedmap"
 )
 
+type ReportType string
+const (
+	GAME_REPORT ReportType = "game"
+	MOD_REPORT ReportType = "mod"
+)
+
+//Interface ILogReporter defines all methods offered by log reporter
+type ILogReporter interface {
+	GetGameReport(reportType ReportType) (IGameReport, error)
+}
+
+// Struct LogReporter is used as ILogReporter interface implementation
+type LogReporter struct {
+	logReader cw_logReader.ILogReader;
+	logParser cw_logParser.ILogParser;
+	logAnalyzer cw_logAgnalyzer.ILogAnalyzer;
+	errorHandler cw_error.IErrorHandler;
+}
+
+type GameReport struct {
+	Data orderedMap.OrderedMap
+}
+
+type MODGameReport struct {
+	Data orderedMap.OrderedMap
+}
+
+type IGameReport interface {
+	GetData() orderedMap.OrderedMap
+}
+
+func (gr GameReport) GetData() orderedMap.OrderedMap {
+	return gr.Data;
+}
+
+func (mgr MODGameReport) GetData() orderedMap.OrderedMap {
+	return mgr.Data
+}
+
+//Constructor for LogReporter
+func CreateLogReporter(
+	logReader cw_logReader.ILogReader,
+	logParser cw_logParser.ILogParser,
+	logAnalyzer cw_logAgnalyzer.ILogAnalyzer,
+	errorHandler cw_error.IErrorHandler) *LogReporter {
+		return &LogReporter{
+			logReader: logReader,
+			logParser: logParser,
+			logAnalyzer: logAnalyzer,
+			errorHandler: errorHandler,
+		}
+}
+
 // Func GetGameReport generates the basic game report as requested in CloudWalk Assessment item 3.2
 //
 // Returns a map where the key is the match number and the value is the match info
-func GetGameReport() (orderedMap.OrderedMap, error) {
-	stringLog, readerErr := cw_logReader.GetLog()
-	games, parserErr := cw_logParser.ParseLog(stringLog)
+func (logReporter LogReporter) GetGameReport(reportType ReportType) (IGameReport, error) {
+	stringLog, readerErr := logReporter.logReader.GetLog()
+	parsedLog, parserErr := logReporter.logParser.Parse(stringLog)
 
-	analyzedGames := cw_logAgnalyzer.GetMatchesInfo(games)
+	var analyzedMatches IGameReport
 
-	var aggregatedErrors = cw_error.BuildErrorOutput(readerErr, parserErr)
-	return analyzedGames, aggregatedErrors
-}
+	if reportType == GAME_REPORT {
+		analyzedMatches = GameReport {
+			Data: logReporter.logAnalyzer.GetMatchesInfo(parsedLog),
+		}
+	} else {
+		analyzedMatches = MODGameReport{
+			Data: logReporter.logAnalyzer.GetMODMatchesInfo(parsedLog),
+		}
+	}
 
-// Func GetGameReport generates the MOD game report as requested in CloudWalk Assessment item 3.3
-//
-// Returns a map where the key is the MOD type and the value is the count of times that happened
-func GetMODGameReport() (orderedMap.OrderedMap, error){
-	stringLog, readerErr := cw_logReader.GetLog()
-	games, parserErr := cw_logParser.ParseLog(stringLog)
+	var aggregatedErrors = logReporter.errorHandler.BuildErrorOutput(readerErr, parserErr)
 
-	analyzedGames := cw_logAgnalyzer.GetMODMatchesInfo(games)
-
-	var aggregatedErrors = cw_error.BuildErrorOutput(readerErr, parserErr)
-	return analyzedGames, aggregatedErrors
+	return  analyzedMatches, aggregatedErrors
 }

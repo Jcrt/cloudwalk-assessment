@@ -7,6 +7,16 @@ import (
 	"os"
 )
 
+//Interface ILogReader defines all methods offered by log reader
+type ILogReader interface {
+	GetLog() (string, error);
+}
+
+// Struct LogReader is used as ILogReader interface implementation
+type LogReader struct {
+
+}
+
 // defines the place where log file is located in local machine
 const filepath string = `assets\qgames.log.txt`;
 
@@ -21,7 +31,7 @@ type singleStringLog struct {
 //Func GetLog provides the string log of the application
 // 
 // Returns the string containing log and error
-func GetLog() (string, error) {
+func (logReader LogReader) GetLog() (string, error) {
 	logObject, err := getInstance() 
 	return logObject.stringLog, err
 }

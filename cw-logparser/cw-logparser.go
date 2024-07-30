@@ -14,6 +14,16 @@ import (
 // keywordRegex will be instantiated only here to improve performance
 var keywordRegex = regexp.MustCompile(`(?<prefix>\d{1,2}:\d{2} )(?<keyword>[^:]*:)`)
 
+//Interface ILogParser defines all methods offered by log parser
+type ILogParser interface {
+	Parse(logString string) (LogParser, error);
+}
+
+// Struct LogParser is used as ILogParser interface implementation
+type LogParser struct {
+	Matches []Match;
+}
+
 // Match is the struct that defines the useful information about each match in the log
 type Match struct {
 	Order int
@@ -43,7 +53,7 @@ const(
 )
 
 // ParseLog is the function that retrieve log info and parse it to log parser types
-func ParseLog(logString string) ([]Match, error) {
+func (logParser LogParser) Parse(logString string) (LogParser, error) {
 	matches := make([]Match, 0)
 	lines := strings.SplitN(logString, "\n", -1)
 
@@ -82,7 +92,11 @@ func ParseLog(logString string) ([]Match, error) {
 		log.Output(1, err.Error())
 	}
 
-	return matches, err
+	logParser = LogParser {
+		Matches: matches,
+	}
+
+	return  logParser, err
 }
 
 //Func validate makes a basic input validation

@@ -14,6 +14,17 @@ import (
 // Defines the <world> code in the Kill logs
 const worldKillerId int = 1022
 
+//Interface ILogAnalyzer defines all methods offered by log analyzer
+type ILogAnalyzer interface {
+	GetMatchesInfo(parsedLog cw_logParser.LogParser) orderedMap.OrderedMap;
+	GetMODMatchesInfo(parsedLog cw_logParser.LogParser) orderedMap.OrderedMap;
+}
+
+// Struct LogAnalyzer is used as ILogAnalyzer interface implementation
+type LogAnalyzer struct {
+
+}
+
 // MatchInfo struct defines all information relative to the Game in analysis aspect
 type MatchInfo struct {
 	TotalKills int
@@ -31,10 +42,10 @@ type MODMatchInfo struct {
 // The parameter games receives an array of game log parser object
 //
 // Returns an OrderedMap containing all matches
-func GetMatchesInfo(matches []cw_logParser.Match) orderedMap.OrderedMap {
+func (logAnalyzer LogAnalyzer) GetMatchesInfo(parsedLog cw_logParser.LogParser) orderedMap.OrderedMap {
 	matchesInfo := orderedMap.New()
 
-	for index, match := range matches {
+	for index, match := range parsedLog.Matches {
 		kills := getKillsByPlayer(match)
 		currentMatch := MatchInfo {
 			Players: getPlayerNames(match.Players),
@@ -49,42 +60,13 @@ func GetMatchesInfo(matches []cw_logParser.Match) orderedMap.OrderedMap {
 	return *matchesInfo;
 }
 
-// Func getRankingByKills creates a copy of kills orderedMap and with it's data creates a new ranking list
-// based on the kills list
-// The parameter kills is an orderedMap containing players and amount of kills unordered
-// Returns a new orderedList containing the ranking
-
-// OBS: In terms of performance, it's not good because I'm recreating a list and doubling the memory consumption
-// I only did it to clearly separate the concerns of the functions, but I could do this in one function that would
-// return both kills ordered and ranking 
-func getRankingByKills(kills orderedMap.OrderedMap) orderedMap.OrderedMap {
-
-	rankedPlayers := orderedMap.New()
-	killCopy := orderedMap.New()
-
-	for _, kill := range kills.Keys() {
-		value, _ := kills.Get(kill)
-		killCopy.Set(kill, value)
-	}
-
-	killCopy.Sort(func(a *orderedMap.Pair, b *orderedMap.Pair) bool{
-		return a.Value().(int) > b.Value().(int)
-	})
-
-	for index, rankedPlayer := range killCopy.Keys() {
-		rankedPlayers.Set(strconv.Itoa(index + 1), rankedPlayer)
-	}
-
-	return *rankedPlayers
-}
-
 // Func GetMODMatchesInfo build a map for each mean of death that occurred in logs, group it and count it
 // The parameter games receives an array of game log parser object
 //
 // Returns an OrderedMap containing all means of death grouped and counted
-func GetMODMatchesInfo(games []cw_logParser.Match) orderedMap.OrderedMap {
+func (logAnalyzer LogAnalyzer) GetMODMatchesInfo(parsedLog cw_logParser.LogParser) orderedMap.OrderedMap {
 	modMatchesInfo := orderedMap.New()
-	for index, match := range games {
+	for index, match := range parsedLog.Matches {
 		currentMODMatch := MODMatchInfo {
 			KillsByMeans: getKillsByMean(match.Kills),
 		}
@@ -166,3 +148,33 @@ func getKillsByPlayer(match cw_logParser.Match) orderedMap.OrderedMap {
 
 	return *killsByPlayer
 }
+
+// Func getRankingByKills creates a copy of kills orderedMap and with it's data creates a new ranking list
+// based on the kills list
+// The parameter kills is an orderedMap containing players and amount of kills unordered
+// Returns a new orderedList containing the ranking
+
+// OBS: In terms of performance, it's not good because I'm recreating a list and doubling the memory consumption
+// I only did it to clearly separate the concerns of the functions, but I could do this in one function that would
+// return both kills ordered and ranking 
+func getRankingByKills(kills orderedMap.OrderedMap) orderedMap.OrderedMap {
+
+	rankedPlayers := orderedMap.New()
+	killCopy := orderedMap.New()
+
+	for _, kill := range kills.Keys() {
+		value, _ := kills.Get(kill)
+		killCopy.Set(kill, value)
+	}
+
+	killCopy.Sort(func(a *orderedMap.Pair, b *orderedMap.Pair) bool{
+		return a.Value().(int) > b.Value().(int)
+	})
+
+	for index, rankedPlayer := range killCopy.Keys() {
+		rankedPlayers.Set(strconv.Itoa(index + 1), rankedPlayer)
+	}
+
+	return *rankedPlayers
+}
+
