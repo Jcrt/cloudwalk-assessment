@@ -3,7 +3,10 @@ package main
 import (
 	cw_consoleApp "cloudwalk-assessment/cw-consoleApp"
 	cw_error "cloudwalk-assessment/cw-error"
+<<<<<<< HEAD
 	cw_jsonParser "cloudwalk-assessment/cw-jsonParser"
+=======
+>>>>>>> 751049da98d95edc838bec63cd0eccadc7b65183
 	jsonParser "cloudwalk-assessment/cw-jsonParser"
 	cw_logAnalyzer "cloudwalk-assessment/cw-logAnalyzer"
 	cw_logParser "cloudwalk-assessment/cw-logParser"
