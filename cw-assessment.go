@@ -4,7 +4,6 @@ import (
 	cw_consoleApp "cloudwalk-assessment/cw-consoleApp"
 	cw_error "cloudwalk-assessment/cw-error"
 	cw_jsonParser "cloudwalk-assessment/cw-jsonParser"
-	jsonParser "cloudwalk-assessment/cw-jsonParser"
 	cw_logAnalyzer "cloudwalk-assessment/cw-logAnalyzer"
 	cw_logParser "cloudwalk-assessment/cw-logParser"
 	cw_logReader "cloudwalk-assessment/cw-logReader"
@@ -19,7 +18,7 @@ func main() {
 	var logAnalyzer cw_logAnalyzer.ILogAnalyzer = &cw_logAnalyzer.LogAnalyzer{}
 	var errorHandler cw_error.IErrorHandler = &cw_error.ErrorHandler{}
 	var consoleApp cw_consoleApp.IConsoleApp = &cw_consoleApp.ConsoleApp{}
-	var jsonParser cw_jsonParser.IJsonParser = &jsonParser.JsonParser{}
+	var jsonParser cw_jsonParser.IJsonParser = &cw_jsonParser.JsonParser{}
 
 	logReporter := cw_reporter.CreateLogReporter(logReader, logParser, logAnalyzer, errorHandler)
 
