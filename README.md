@@ -19,6 +19,7 @@ There is no configuration file to provide file path, so I added it inside `Asset
 ### Packages used
 - [go-funk](https://github.com/thoas/go-funk) package was used become collections more flexible with aggregation, slicing and search operations.
 - [orderedmap](https://github.com/iancoleman/orderedmap) package was used to achieve map key order maintenance, since with the default Go map structure, `json.Marshall()` couldn't keep it.
+- [testify](https://github.com/stretchr/testify) package was used to generate mocks and assertions in UTs
 
 ### Comments (known as summaries in .NET or Javadoc in Java)
 Each package, constant, type and function inside the application have it's own comment to explain it's general purpose inside it's scope.
