@@ -1,10 +1,23 @@
 package cw_logParser
 
 import (
+	"fmt"
 	"strconv"
 	"strings"
 	"testing"
+
+	"github.com/stretchr/testify/mock"
 )
+
+type errorHandlerMock struct {
+	mock.Mock
+}
+
+func (ehm *errorHandlerMock) BuildErrorOutput(errors ...error) error {
+	return nil
+}
+
+var errHandlerMock = new(errorHandlerMock)
 
 //Tests if log will be processed due the content is empty or not
 func Test_Parse_ShouldHaveErrorWhenLogStringIsEmpty(t *testing.T) {
@@ -17,8 +30,10 @@ func Test_Parse_ShouldHaveErrorWhenLogStringIsEmpty(t *testing.T) {
 		{ "some text", false },
 	}
 
-
-	logParser := CreateLogParser()
+	mockError := fmt.Errorf("log content is empty")
+	errHandlerMock.On("BuildErrorOutput", mock.Anything).Return(mockError)
+	
+	logParser := CreateLogParser(errHandlerMock)
 
 	for index, tc := range testcases {
 		log, err := logParser.Parse(tc.input)
@@ -47,6 +62,10 @@ func Test_Parse_ShouldBeCreated(t *testing.T) {
 		{ "0:00 initgame: ", 1 },
 	}
 
+	errHandlerMock.On("BuildErrorOutput", mock.Anything).Return(nil)
+	
+	logParser := CreateLogParser(errHandlerMock)
+
 	for index, tc := range testCases {
 		log, _ := logParser.Parse(tc.input)
 		matchesCounter := len(log.Matches)
@@ -66,19 +85,17 @@ func Test_Parse_ShouldCreateAKillEntry(t *testing.T){
 		input string;
 		killsCounter int;
 	} {
-		// { "00:00 InitGame: \n 00:01 Kill: ", 0 }, 
-		{ "00:00 InitGame: \n00:01 Kill: 1 2 3:", 0 }, 
-		// { "00:00 INITGAME:\n KILL", 0 },
-		// { "0:00 kill: ", 0 },
-	}
-
-	errorHandlerMock = &ErrorHandlerMock{
-		BuildErrorOutput: func (errors ...error) error {
-			return nil
-		},
+		{ "00:00 InitGame: \n 00:01 Kill: ", 0 }, 
+		{ "00:00 InitGame: \n00:01 Kill: 1 2 3:", 1 }, 
+		{ "00:00 INITGAME:\n KILL", 0 },
+		{ "0:00 kill: ", 0 },
 	}
 
 	var killsCounter int
+
+	errHandlerMock.On("BuildErrorOutput", mock.Anything).Return(nil)
+	
+	logParser := CreateLogParser(errHandlerMock)
 
 	for index, tc := range testCases {
 		log, _ := logParser.Parse(tc.input)
@@ -98,3 +115,41 @@ func Test_Parse_ShouldCreateAKillEntry(t *testing.T){
 		}
 	}
 }
+
+func Test_Parse_ShouldParsePlayerCorrectly(t *testing.T){
+	testCases := []struct {
+		input string;
+		PlayersCounter int;
+	} {
+		{ "00:00 InitGame: \n00:01 clientuserinfochanged: 2 \\nTest ", 0 }, 
+		{ "00:00 InitGame: \n00:01 clientuserinfochanged: 2 n\\Test ", 1 }, 
+		{ "00:00 InitGame: \n00:01 Kill: 1 2 3:", 0 }, 
+		{ "00:00 INITGAME:\n KILL", 0 },
+		{ "0:00 kill: ", 0 },
+	}
+
+	var playerCounter int
+
+	errHandlerMock.On("BuildErrorOutput", mock.Anything).Return(nil)
+	
+	logParser := CreateLogParser(errHandlerMock)
+
+	for index, tc := range testCases {
+		log, _ := logParser.Parse(tc.input)
+
+		if(len(log.Matches) == 0) {
+			playerCounter = 0
+		} else {
+			playerCounter = len(log.Matches[0].Players)
+		}
+
+		if(playerCounter != tc.PlayersCounter){
+			t.Errorf("%s) Players lenght expected: %s; found: %s; input: %q", 
+				strconv.Itoa(index), 
+				strconv.Itoa(tc.PlayersCounter), 
+				strconv.Itoa(playerCounter), 
+			  tc.input)
+		}
+	}
+}
+

@@ -6,17 +6,17 @@ import (
 	cw_error "cloudwalk-assessment/cw-error"
 	quake3 "cloudwalk-assessment/quake3"
 	"fmt"
-	"log"
 	"regexp"
 	"strconv"
 	"strings"
 )
 
-const prefixRegexp string = `(?<prefix>\d{1,2}:\d{2} )`
+const prefixRegexp string = `(?i)(?<prefix>\d{1,2}:\d{2} )`
 
 // keywordRegex will be instantiated only here to improve performance
 var keywordRegex = regexp.MustCompile(prefixRegexp + `(?<keyword>[^:]*:)`)
 var killKeywordRegex = regexp.MustCompile(prefixRegexp + `(?<keyword>`+ string(SK_Kill) + ` )(?<data>((\d{1,4} ?){3}))`)
+var playerKeywordRegex = regexp.MustCompile(prefixRegexp + `(?<keyword>`+ string(SK_ClientUserinfoChanged) + ` )(?<info>\d* n\\[^\\t]*)`)
 
 //Interface ILogParser defines all methods offered by log parser
 type ILogParser interface {
@@ -72,34 +72,42 @@ func (logParser *LogParser) Parse(logString string) (Log, error) {
 	matches := make([]Match, 0)
 	trimmedLogString := strings.TrimSpace(logString)
 	lines := strings.SplitN(trimmedLogString, "\n", -1)
+	errors := make([]error, 0)
 
 	isValid, err := validate(logString)
 
 	if(isValid) {
-		for _, line := range lines{
-			line = strings.ToLower(line)
+		for index, line := range lines{
 			hasKeyword, keyword := findKeyword(line)
 			if(hasKeyword){
-					switch op := keyword; op {
+					switch op := keyword; strings.ToLower(op) {
 						case string(SK_InitGame): {
 							currentMatch := Match{
 								Order: len(matches) + 1,
 								Players: make(map[int]Player, 0),
+								Kills: make([]Kill, 0),
 							}
 							matches = append(matches, currentMatch)
 						}
 						case string(SK_ClientUserinfoChanged): {
 							if(len(matches) > 0){
-								player, playerId := parsePlayerLine(line)
-								matches[len(matches)-1].Players[playerId] = player
+								exists, player, playerId, playerErr := logParser.parsePlayerLine(line)
+
+								if(exists) {
+									matches[len(matches)-1].Players[playerId] = player
+								} else {
+									errors = append(errors, fmt.Errorf("line %s: %s", strconv.Itoa(index), playerErr.Error()))
+								}
 							}
 						}
 						case string(SK_Kill): {
 							if(len(matches) > 0){
-								kill, killErr := logParser.parseKillLine(line)
+								exists, kill, killErr := logParser.parseKillLine(line)
 
-								if(killErr == nil) {
+								if(exists) {
 									matches[len(matches)-1].Kills = append(matches[len(matches)-1].Kills, kill)
+								} else {
+									errors = append(errors, fmt.Errorf("line %s: %s", strconv.Itoa(index), killErr.Error()))
 								}
 							}
 						}
@@ -108,8 +116,8 @@ func (logParser *LogParser) Parse(logString string) (Log, error) {
 			}
 		}
 	} else {
-		err = fmt.Errorf("the parse process failed. reason: %s", err.Error())
-		log.Output(1, err.Error())
+
+		err = logParser.errorHandler.BuildErrorOutput(errors...)
 	}
 
 	parsedLog := Log {
@@ -169,24 +177,34 @@ func findSubgroupRegex(line string, regexp *regexp.Regexp, matchIndex int) (bool
 // The parameter line is a log line
 //
 // Returns a tuple where the first item is the Player struct and the second is an int containing player id
-func parsePlayerLine(line string) (Player, int) {
-	before, _, _ := strings.Cut(line, "\\t")
-	before, playerName, _ := strings.Cut(before,"n\\")
-	_, playerId, _ := strings.Cut(before, string(SK_ClientUserinfoChanged))
-	playerIdInt, _ := strconv.Atoi(strings.TrimSpace(playerId))
+func (logParser *LogParser) parsePlayerLine(line string) (bool, Player, int, error) {
 
-	player := Player {
-		Name: playerName,
+	var player Player
+	var playerId int
+	var err error
+	
+	exists, data := findSubgroupRegex(line, playerKeywordRegex, 3)
+	before, after, _ := strings.Cut(data, "n\\")
+
+
+	if(exists) {
+		playerId, _ = strconv.Atoi(strings.TrimSpace(before))
+
+		player = Player {
+			Name: after,
+		}
+	} else{
+		err = fmt.Errorf("not well formed player log line: %q", line)
 	}
 
-	return player, playerIdInt;	
+	return exists, player, playerId, err;	
 }
 
 // Func parseKillLine is used to parse a log line that defines a kill to the Kill struct
 // The parameter line is a log line
 //
 // Returns a Kill struct containing all required kill data
-func (logParser *LogParser) parseKillLine(line string) (Kill, error) {
+func (logParser *LogParser) parseKillLine(line string) (bool, Kill, error) {
 	var kill Kill
 	var err error
 
@@ -211,5 +229,5 @@ func (logParser *LogParser) parseKillLine(line string) (Kill, error) {
 		}
 	}
 
-	return kill, err;
+	return exists, kill, err;
 }
