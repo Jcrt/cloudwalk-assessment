@@ -16,8 +16,8 @@ const worldKillerId int = 1022
 
 //Interface ILogAnalyzer defines all methods offered by log analyzer
 type ILogAnalyzer interface {
-	GetMatchesInfo(parsedLog cw_logParser.LogParser) orderedMap.OrderedMap;
-	GetMODMatchesInfo(parsedLog cw_logParser.LogParser) orderedMap.OrderedMap;
+	GetMatchesInfo(parsedLog cw_logParser.Log) orderedMap.OrderedMap;
+	GetMODMatchesInfo(parsedLog cw_logParser.Log) orderedMap.OrderedMap;
 }
 
 // Struct LogAnalyzer is used as ILogAnalyzer interface implementation
@@ -42,7 +42,7 @@ type MODMatchInfo struct {
 // The parameter games receives an array of game log parser object
 //
 // Returns an OrderedMap containing all matches
-func (logAnalyzer LogAnalyzer) GetMatchesInfo(parsedLog cw_logParser.LogParser) orderedMap.OrderedMap {
+func (logAnalyzer *LogAnalyzer) GetMatchesInfo(parsedLog cw_logParser.Log) orderedMap.OrderedMap {
 	matchesInfo := orderedMap.New()
 
 	for index, match := range parsedLog.Matches {
@@ -64,7 +64,7 @@ func (logAnalyzer LogAnalyzer) GetMatchesInfo(parsedLog cw_logParser.LogParser) 
 // The parameter games receives an array of game log parser object
 //
 // Returns an OrderedMap containing all means of death grouped and counted
-func (logAnalyzer LogAnalyzer) GetMODMatchesInfo(parsedLog cw_logParser.LogParser) orderedMap.OrderedMap {
+func (logAnalyzer *LogAnalyzer) GetMODMatchesInfo(parsedLog cw_logParser.Log) orderedMap.OrderedMap {
 	modMatchesInfo := orderedMap.New()
 	for index, match := range parsedLog.Matches {
 		currentMODMatch := MODMatchInfo {

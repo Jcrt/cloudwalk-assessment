@@ -3,6 +3,7 @@
 package cw_logParser
 
 import (
+	cw_error "cloudwalk-assessment/cw-error"
 	quake3 "cloudwalk-assessment/quake3"
 	"fmt"
 	"log"
@@ -11,16 +12,30 @@ import (
 	"strings"
 )
 
+const prefixRegexp string = `(?<prefix>\d{1,2}:\d{2} )`
+
 // keywordRegex will be instantiated only here to improve performance
-var keywordRegex = regexp.MustCompile(`(?<prefix>\d{1,2}:\d{2} )(?<keyword>[^:]*:)`)
+var keywordRegex = regexp.MustCompile(prefixRegexp + `(?<keyword>[^:]*:)`)
+var killKeywordRegex = regexp.MustCompile(prefixRegexp + `(?<keyword>`+ string(SK_Kill) + ` )(?<data>((\d{1,4} ?){3}))`)
 
 //Interface ILogParser defines all methods offered by log parser
 type ILogParser interface {
-	Parse(logString string) (LogParser, error);
+	Parse(logString string) (Log, error);
 }
 
 // Struct LogParser is used as ILogParser interface implementation
 type LogParser struct {
+	errorHandler cw_error.IErrorHandler
+}
+
+func CreateLogParser(errorHandler cw_error.IErrorHandler) *LogParser {
+	return &LogParser{
+		errorHandler: errorHandler,
+	}
+}
+
+// Struct Log is used as ILogParser interface implementation
+type Log struct {
 	Matches []Match;
 }
 
@@ -47,20 +62,22 @@ type Kill struct {
 // the log parser objects
 type searchingKeywords string
 const(
-	SK_InitGame searchingKeywords = "InitGame:"
-	SK_ClientUserinfoChanged searchingKeywords = "ClientUserinfoChanged:"
-	SK_Kill searchingKeywords = "Kill:"
+	SK_InitGame searchingKeywords = "initgame:"
+	SK_ClientUserinfoChanged searchingKeywords = "clientuserinfochanged:"
+	SK_Kill searchingKeywords = "kill:"
 )
 
 // ParseLog is the function that retrieve log info and parse it to log parser types
-func (logParser LogParser) Parse(logString string) (LogParser, error) {
+func (logParser *LogParser) Parse(logString string) (Log, error) {
 	matches := make([]Match, 0)
-	lines := strings.SplitN(logString, "\n", -1)
+	trimmedLogString := strings.TrimSpace(logString)
+	lines := strings.SplitN(trimmedLogString, "\n", -1)
 
 	isValid, err := validate(logString)
 
 	if(isValid) {
 		for _, line := range lines{
+			line = strings.ToLower(line)
 			hasKeyword, keyword := findKeyword(line)
 			if(hasKeyword){
 					switch op := keyword; op {
@@ -79,8 +96,11 @@ func (logParser LogParser) Parse(logString string) (LogParser, error) {
 						}
 						case string(SK_Kill): {
 							if(len(matches) > 0){
-								kill := parseKillLine(line)
-								matches[len(matches)-1].Kills = append(matches[len(matches)-1].Kills, kill)
+								kill, killErr := logParser.parseKillLine(line)
+
+								if(killErr == nil) {
+									matches[len(matches)-1].Kills = append(matches[len(matches)-1].Kills, kill)
+								}
 							}
 						}
 						default: continue; 
@@ -92,11 +112,11 @@ func (logParser LogParser) Parse(logString string) (LogParser, error) {
 		log.Output(1, err.Error())
 	}
 
-	logParser = LogParser {
+	parsedLog := Log {
 		Matches: matches,
 	}
 
-	return  logParser, err
+	return  parsedLog, err
 }
 
 //Func validate makes a basic input validation
@@ -128,6 +148,20 @@ func findKeyword(line string) (bool, string) {
 		contains = true
 		keyword = match[keywordRegex.SubexpIndex("keyword")]
 	} 
+
+	return contains, keyword
+}
+
+func findSubgroupRegex(line string, regexp *regexp.Regexp, matchIndex int) (bool, string) {
+	match := regexp.FindStringSubmatch(line)
+	contains := false
+	keyword := ""
+
+	if(len(match) >= matchIndex){
+		contains = true
+		keyword = match[matchIndex]
+	} 
+
 	return contains, keyword
 }
 
@@ -152,20 +186,30 @@ func parsePlayerLine(line string) (Player, int) {
 // The parameter line is a log line
 //
 // Returns a Kill struct containing all required kill data
-func parseKillLine(line string) Kill {
-	_, after, _ := strings.Cut(line, string(SK_Kill))
-	before, _, _ := strings.Cut(after, ":")
-	infos := strings.Split(strings.TrimSpace(before), " ")
+func (logParser *LogParser) parseKillLine(line string) (Kill, error) {
+	var kill Kill
+	var err error
 
-	killerId, _ := strconv.Atoi(infos[0])
-	killedId, _ := strconv.Atoi(infos[1])
-	meanOfDeath, _ := strconv.Atoi(infos[2])
+	exists, data := findSubgroupRegex(line, killKeywordRegex, 3)
 
-	kill := Kill{
-		KillerId: killerId,
-		MeanOfDeath: quake3.MeanOfDeath(meanOfDeath),
-		KilledId: killedId,
+	if(!exists){
+		err = fmt.Errorf("not well formed Kill log line: %q", line)
+	} else {
+		infos := strings.Split(strings.TrimSpace(data), " ")
+		killerId, killerErr := strconv.Atoi(infos[0])
+		killedId, killedErr := strconv.Atoi(infos[1])
+		meanOfDeath, modErr := strconv.Atoi(infos[2])
+
+		err = logParser.errorHandler.BuildErrorOutput(killerErr, killedErr, modErr)
+
+		if(err == nil) {
+			kill = Kill{
+				KillerId: killerId,
+				MeanOfDeath: quake3.MeanOfDeath(meanOfDeath),
+				KilledId: killedId,
+			}
+		}
 	}
 
-	return kill;
+	return kill, err;
 }

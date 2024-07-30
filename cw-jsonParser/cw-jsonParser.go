@@ -21,7 +21,7 @@ type JsonParser struct {
 // The parameter value expect any value to be converted to Json
 //
 // Returns a string containing the json value
-func (jsonParser JsonParser) Parse2Json(value any) string {
+func (jsonParser *JsonParser) Parse2Json(value any) string {
 	parsedValue, err := json.MarshalIndent(value, "", "  ")
 	if(err != nil){
 		fmt.Println("Error: ", err)

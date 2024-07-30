@@ -19,7 +19,7 @@ type ErrorHandler struct {
 // end user an unique and formatted error
 //
 // Returns error interface with all errors
-func (errorHandler ErrorHandler) BuildErrorOutput(errors ...error) error{
+func (errorHandler *ErrorHandler) BuildErrorOutput(errors ...error) error{
 	var concatedErr error
 	var errorString string = ""
 	if(len(errors) > 0) {

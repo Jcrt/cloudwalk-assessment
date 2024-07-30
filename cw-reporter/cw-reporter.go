@@ -67,7 +67,7 @@ func CreateLogReporter(
 // Func GetGameReport generates the basic game report as requested in CloudWalk Assessment item 3.2
 //
 // Returns a map where the key is the match number and the value is the match info
-func (logReporter LogReporter) GetGameReport(reportType ReportType) (IGameReport, error) {
+func (logReporter *LogReporter) GetGameReport(reportType ReportType) (IGameReport, error) {
 	stringLog, readerErr := logReporter.logReader.GetLog()
 	parsedLog, parserErr := logReporter.logParser.Parse(stringLog)
 

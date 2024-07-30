@@ -31,7 +31,7 @@ type singleStringLog struct {
 //Func GetLog provides the string log of the application
 // 
 // Returns the string containing log and error
-func (logReader LogReader) GetLog() (string, error) {
+func (logReader *LogReader) GetLog() (string, error) {
 	logObject, err := getInstance() 
 	return logObject.stringLog, err
 }
