@@ -1,0 +1,931 @@
+
+<!DOCTYPE html>
+<html>
+	<head>
+		<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+		<title>cloudwalk-assessment: Go Coverage Report</title>
+		<style>
+			body {
+				background: black;
+				color: rgb(80, 80, 80);
+			}
+			body, pre, #legend span {
+				font-family: Menlo, monospace;
+				font-weight: bold;
+			}
+			#topbar {
+				background: black;
+				position: fixed;
+				top: 0; left: 0; right: 0;
+				height: 42px;
+				border-bottom: 1px solid rgb(80, 80, 80);
+			}
+			#content {
+				margin-top: 50px;
+			}
+			#nav, #legend {
+				float: left;
+				margin-left: 10px;
+			}
+			#legend {
+				margin-top: 12px;
+			}
+			#nav {
+				margin-top: 10px;
+			}
+			#legend span {
+				margin: 0 5px;
+			}
+			.cov0 { color: rgb(192, 0, 0) }
+.cov1 { color: rgb(128, 128, 128) }
+.cov2 { color: rgb(116, 140, 131) }
+.cov3 { color: rgb(104, 152, 134) }
+.cov4 { color: rgb(92, 164, 137) }
+.cov5 { color: rgb(80, 176, 140) }
+.cov6 { color: rgb(68, 188, 143) }
+.cov7 { color: rgb(56, 200, 146) }
+.cov8 { color: rgb(44, 212, 149) }
+.cov9 { color: rgb(32, 224, 152) }
+.cov10 { color: rgb(20, 236, 155) }
+
+		</style>
+	</head>
+	<body>
+		<div id="topbar">
+			<div id="nav">
+				<select id="files">
+				
+				<option value="file0">cloudwalk-assessment/cw-assessment.go (0.0%)</option>
+				
+				<option value="file1">cloudwalk-assessment/cw-consoleApp/cw-consoleApp.go (0.0%)</option>
+				
+				<option value="file2">cloudwalk-assessment/cw-error/cw-error.go (100.0%)</option>
+				
+				<option value="file3">cloudwalk-assessment/cw-jsonParser/cw-jsonParser.go (75.0%)</option>
+				
+				<option value="file4">cloudwalk-assessment/cw-logAnalyzer/cw-logAnalyzer.go (100.0%)</option>
+				
+				<option value="file5">cloudwalk-assessment/cw-logParser/cw-logParser.go (98.6%)</option>
+				
+				<option value="file6">cloudwalk-assessment/cw-logReader/cw-logReader.go (0.0%)</option>
+				
+				<option value="file7">cloudwalk-assessment/cw-reporter/cw-reporter.go (83.3%)</option>
+				
+				<option value="file8">cloudwalk-assessment/quake3/meanofdeath_string.go (66.7%)</option>
+				
+				</select>
+			</div>
+			<div id="legend">
+				<span>not tracked</span>
+			
+				<span class="cov0">not covered</span>
+				<span class="cov8">covered</span>
+			
+			</div>
+		</div>
+		<div id="content">
+		
+		<pre class="file" id="file0" style="display: none">package main
+
+import (
+        cw_consoleApp "cloudwalk-assessment/cw-consoleApp"
+        cw_error "cloudwalk-assessment/cw-error"
+        cw_jsonParser "cloudwalk-assessment/cw-jsonParser"
+        cw_logAnalyzer "cloudwalk-assessment/cw-logAnalyzer"
+        cw_logParser "cloudwalk-assessment/cw-logParser"
+        cw_logReader "cloudwalk-assessment/cw-logReader"
+        cw_reporter "cloudwalk-assessment/cw-reporter"
+        "fmt"
+)
+
+
+func main() <span class="cov0" title="0">{
+        var logParser cw_logParser.ILogParser;
+        var logReporter cw_reporter.ILogReporter;
+        var logReader cw_logReader.ILogReader = &amp;cw_logReader.LogReader{};
+        var logAnalyzer cw_logAnalyzer.ILogAnalyzer = &amp;cw_logAnalyzer.LogAnalyzer{};
+        var errorHandler cw_error.IErrorHandler = &amp;cw_error.ErrorHandler{};
+        var consoleApp cw_consoleApp.IConsoleApp = &amp;cw_consoleApp.ConsoleApp{};
+        var jsonParser cw_jsonParser.IJsonParser = &amp;cw_jsonParser.JsonParser{};
+
+        logParser = cw_logParser.CreateLogParser(errorHandler)
+        logReporter = cw_reporter.CreateLogReporter(logReader, logParser, logAnalyzer, errorHandler)
+
+        applicationMode, err := consoleApp.GetApplicationMode()
+
+        if(err != nil) </span><span class="cov0" title="0">{
+                fmt.Println(err.Error())
+        }</span> else<span class="cov0" title="0"> {
+                gameReport, err := logReporter.GetGameReport(cw_reporter.ReportType(applicationMode))
+
+                if(err != nil)</span><span class="cov0" title="0">{
+                        fmt.Printf("%s", err.Error())
+                }</span> else<span class="cov0" title="0"> {
+                        output, _ := jsonParser.Parse2Json(gameReport)
+                        fmt.Printf("%s", output)
+                }</span>
+        }
+}
+</pre>
+		
+		<pre class="file" id="file1" style="display: none">package cw_consoleApp
+
+import (
+        "fmt"
+        "os"
+)
+
+// ReportType expose all avaliable report types
+type applicationMode string
+const (
+        MODE_GAME_REPORT applicationMode = "game"
+        MODE_MOD_REPORT applicationMode = "mod"
+        MODE_HELP applicationMode = "help"
+)
+
+//Interface IConsoleApp defines all methods offered by user interface
+type IConsoleApp interface {
+        GetApplicationMode() (applicationMode, error)
+}
+
+// Struct ConsoleApp is used as IConsoleApp interface implementation
+type ConsoleApp struct {
+
+}
+
+// Func GetApplicationMode shows a menu to the user can input arguments in the program execution
+//
+// Returns applicationMode that defines which type of report will be generated and error
+func (consoleApp *ConsoleApp) GetApplicationMode() (applicationMode, error) <span class="cov0" title="0">{
+        var mode applicationMode
+        var err error = nil
+
+        if(len(os.Args) &gt; 1) </span><span class="cov0" title="0">{
+                firstArg := os.Args[1]
+
+                if(len(firstArg) &gt; 0) </span><span class="cov0" title="0">{
+                        switch option := firstArg; option </span>{
+                                case "help":<span class="cov0" title="0"> </span><span class="cov0" title="0">{
+                                        fmt.Println("CloudWalk Assessment help center ===============")                                                
+                                        fmt.Println("Available arguments ")
+                                        fmt.Println("    -t &lt;report type&gt; The type of desired report output; OPTIONS: game, mod")
+                                        fmt.Println("================================================")
+                                        mode = MODE_HELP
+                                }</span>
+
+                                case "-t":<span class="cov0" title="0"> </span><span class="cov0" title="0">{
+                                        if(len(os.Args) &gt; 2) </span><span class="cov0" title="0">{
+                                                secondArg := os.Args[2]
+
+                                                if(secondArg == string(MODE_GAME_REPORT))</span><span class="cov0" title="0">{
+                                                        mode = MODE_GAME_REPORT
+                                                }</span> else<span class="cov0" title="0"> if(secondArg == string(MODE_MOD_REPORT)) </span><span class="cov0" title="0">{
+                                                        mode = MODE_MOD_REPORT
+                                                }</span> else<span class="cov0" title="0"> {
+                                                        err = fmt.Errorf("invalid type option: %s", secondArg)
+                                                }</span>
+                                        } else<span class="cov0" title="0"> {
+                                                err = fmt.Errorf("type wasn't provided after -t argument")
+                                        }</span>
+                                }
+                                default:<span class="cov0" title="0"> </span><span class="cov0" title="0">{
+                                        err = fmt.Errorf("invalid argument: %s", firstArg)
+                                }</span>
+                        }
+                } else<span class="cov0" title="0"> {
+                        mode = MODE_GAME_REPORT
+                }</span>
+        } else<span class="cov0" title="0"> {
+                mode = MODE_GAME_REPORT
+        }</span>
+        
+        <span class="cov0" title="0">return mode, err</span>
+}</pre>
+		
+		<pre class="file" id="file2" style="display: none">package cw_error
+
+import (
+        "fmt"
+        "strconv"
+)
+
+//Interface IErrorHandler defines all methods offered by error handler
+type IErrorHandler interface {
+        BuildErrorOutput(errors ...error) error;
+}
+
+// Struct ErrorHandler is used as IErrorHandler interface implementation
+type ErrorHandler struct {
+
+}
+
+//Func BuildErrorOutput receives an array of errors and concatenate it to show to the
+// end user an unique and formatted error
+//
+// Returns error interface with all errors
+func (errorHandler *ErrorHandler) BuildErrorOutput(errors ...error) error<span class="cov8" title="1">{
+        var concatedErr error
+        var errorString string = ""
+        if(len(errors) &gt; 0) </span><span class="cov8" title="1">{
+                for index, item := range errors </span><span class="cov8" title="1">{
+                        if(item != nil)</span><span class="cov8" title="1">{
+                                errorString = errorString + "\n" + strconv.Itoa(index) + ") " + item.Error()
+                        }</span>
+                }
+
+                <span class="cov8" title="1">if(len(errorString) &gt; 0) </span><span class="cov8" title="1">{
+                        concatedErr = fmt.Errorf("the following error(s) was found: %s", errorString)
+                }</span>
+        }
+
+        <span class="cov8" title="1">return concatedErr</span>
+}</pre>
+		
+		<pre class="file" id="file3" style="display: none">// Package cw_jsonParser is responsible by parse all structs inside the program to Json
+package cw_jsonParser
+
+import (
+        "encoding/json"
+)
+
+//Interface IJsonParser defines all methods offered by json parser
+type IJsonParser interface {
+        Parse2Json(value any) (string, error);
+}
+
+// Struct JsonParser is used as IJsonParser interface implementation
+type JsonParser struct {
+
+}
+
+// Func Parse2Json converts structs to Json
+// The type constraint TValue is declared to any, which means that any type can be provided
+// The parameter value expect any value to be converted to Json
+//
+// Returns a string containing the json value
+func (jsonParser *JsonParser) Parse2Json(value any) (string, error) <span class="cov8" title="1">{
+        parsedValue, err := json.MarshalIndent(value, "", "  ")
+        if(err != nil) </span><span class="cov0" title="0">{
+                return "", err
+        }</span>
+        <span class="cov8" title="1">return string(parsedValue), err</span>
+}</pre>
+		
+		<pre class="file" id="file4" style="display: none">// Package cw_logAnalyzer group all required artifacts to analyze the logs generated by log parser
+// and aggregate all relevant information from game log structs
+package cw_logAnalyzer
+
+import (
+        cw_logParser "cloudwalk-assessment/cw-logParser"
+        "cloudwalk-assessment/quake3"
+        "strconv"
+
+        orderedMap "github.com/iancoleman/orderedmap"
+        funk "github.com/thoas/go-funk"
+)
+
+// Defines the &lt;world&gt; code in the Kill logs
+const worldKillerId int = 1022
+
+//Interface ILogAnalyzer defines all methods offered by log analyzer
+type ILogAnalyzer interface {
+        GetMatchesInfo(parsedLog cw_logParser.Log) *orderedMap.OrderedMap;
+        GetMODMatchesInfo(parsedLog cw_logParser.Log) *orderedMap.OrderedMap;
+}
+
+// Struct LogAnalyzer is used as ILogAnalyzer interface implementation
+type LogAnalyzer struct {
+
+}
+
+// MatchInfo struct defines all information relative to the Game in analysis aspect
+type MatchInfo struct {
+        TotalKills int
+        Players []string
+        Kills orderedMap.OrderedMap
+        Ranking orderedMap.OrderedMap
+}
+
+// MODMatchInfo struct defines a map of all deaths occurred during the game and group it providing a counter of each Mean of Death
+type MODMatchInfo struct {
+        KillsByMeans map[string]int
+}
+
+// Func GetMatchesInfo build a map containing all matches and it's relevant information
+// The parameter games receives an array of game log parser object
+//
+// Returns an OrderedMap containing all matches
+func (logAnalyzer *LogAnalyzer) GetMatchesInfo(parsedLog cw_logParser.Log) *orderedMap.OrderedMap <span class="cov8" title="1">{
+        matchesInfo := orderedMap.New()
+
+        for index, match := range parsedLog.Matches </span><span class="cov8" title="1">{
+                kills := getKillsByPlayer(match)
+                currentMatch := MatchInfo {
+                        Players: getPlayerNames(match.Players),
+                        TotalKills: getTotalKills(match.Kills),
+                        Kills: *kills,
+                        Ranking: *getRankingByKills(kills),
+                }
+                index := getMatchIdentifier(index)
+                matchesInfo.Set(index, currentMatch)
+        }</span>
+
+        <span class="cov8" title="1">return matchesInfo</span>;
+}
+
+// Func GetMODMatchesInfo build a map for each mean of death that occurred in logs, group it and count it
+// The parameter games receives an array of game log parser object
+//
+// Returns an OrderedMap containing all means of death grouped and counted
+func (logAnalyzer *LogAnalyzer) GetMODMatchesInfo(parsedLog cw_logParser.Log) *orderedMap.OrderedMap <span class="cov8" title="1">{
+        modMatchesInfo := orderedMap.New()
+        for index, match := range parsedLog.Matches </span><span class="cov8" title="1">{
+                currentMODMatch := MODMatchInfo {
+                        KillsByMeans: getKillsByMean(match.Kills),
+                }
+                modMatchesInfo.Set(getMatchIdentifier(index), currentMODMatch)
+        }</span>        
+        <span class="cov8" title="1">return modMatchesInfo</span>
+}
+
+func getMatchIdentifier(matchNumber int) string <span class="cov8" title="1">{
+        return "game_"+ strconv.Itoa(matchNumber + 1)
+}</span>
+
+// Func getKillsByMean generates a map containing all means of death that occurred during a match
+// The parameter kills receive an array of Kill and group it into a map with a counter
+//
+// Returns a map containing as key the name of mean of death and as value the amount of time that it occurs
+func getKillsByMean(kills []cw_logParser.Kill) map[string]int <span class="cov8" title="1">{
+        killsByMean := make(map[string]int)
+
+        for _, kill := range kills </span><span class="cov8" title="1">{
+                meanOfDeathName := quake3.MeanOfDeath(kill.MeanOfDeath).String()
+                
+                if entry, ok := killsByMean[meanOfDeathName]; ok </span><span class="cov8" title="1">{
+                        entry++
+                        killsByMean[meanOfDeathName] = entry
+                }</span> else<span class="cov8" title="1"> {
+                        killsByMean[meanOfDeathName] = 1
+                }</span>
+        }
+
+        <span class="cov8" title="1">return killsByMean</span>;
+}
+
+// Func getPlayerNames generates a string array containing all player names that have entered during a match
+// The parameter gamePlayers receive a map of Player gathered from logs
+//
+// Returns a string array containing all player names at the end of the match
+func getPlayerNames(matchPlayers map[int]cw_logParser.Player) []string <span class="cov8" title="1">{
+                players := funk.Values(matchPlayers).([]cw_logParser.Player)
+                playerNames := funk.Get(players, "Name").([]string)
+                return playerNames;
+}</span>
+
+// Func getTotalKills counts all kills occurred in a match
+// The parameter gameKills receives a list of Kill and count it
+//
+// Returns an int with the total amount of kills occurred in the match
+func getTotalKills(matchKills []cw_logParser.Kill) int<span class="cov8" title="1">{
+        return len(matchKills)
+}</span>
+
+// Func getKillsByPlayer groups all kills by player and count it
+// If a player was killed by the &lt;world&gt;, it's scored is decreased by 1 every time that it happened
+// The parameter game is the Game struct
+//
+// Returns an OrderedMap where the key is the mean of kill and the value is an int as a counter of occurrences
+func getKillsByPlayer(match cw_logParser.Match) *orderedMap.OrderedMap <span class="cov8" title="1">{
+        killsByPlayer := orderedMap.New()
+
+        for _, player := range match.Players </span><span class="cov8" title="1">{
+                killsByPlayer.Set(player.Name, 0)
+        }</span>
+
+        <span class="cov8" title="1">for _, kill := range match.Kills </span><span class="cov8" title="1">{
+                playerName := match.Players[kill.KillerId].Name
+
+                if value, ok := killsByPlayer.Get(playerName); ok</span><span class="cov8" title="1">{
+                        intValue := value.(int)
+                        intValue++;
+                        killsByPlayer.Set(playerName, intValue)
+                }</span> else<span class="cov8" title="1"> if kill.KillerId == worldKillerId </span><span class="cov8" title="1">{
+                        killedPlayer := match.Players[kill.KilledId].Name
+                        killScore, _ := killsByPlayer.Get(killedPlayer)
+                        intKillScore := killScore.(int)
+                        intKillScore--
+                        killsByPlayer.Set(killedPlayer, intKillScore)
+                }</span>
+        }
+
+        <span class="cov8" title="1">return killsByPlayer</span>
+}
+
+// Func getRankingByKills creates a copy of kills orderedMap and with it's data creates a new ranking list
+// based on the kills list
+// The parameter kills is an orderedMap containing players and amount of kills unordered
+// Returns a new orderedList containing the ranking
+
+// OBS: In terms of performance, it's not good because I'm recreating a list and doubling the memory consumption
+// I only did it to clearly separate the concerns of the functions, but I could do this in one function that would
+// return both kills ordered and ranking 
+func getRankingByKills(kills *orderedMap.OrderedMap) *orderedMap.OrderedMap <span class="cov8" title="1">{
+
+        rankedPlayers := orderedMap.New()
+        killCopy := orderedMap.New()
+
+        for _, kill := range kills.Keys() </span><span class="cov8" title="1">{
+                value, _ := kills.Get(kill)
+                killCopy.Set(kill, value)
+        }</span>
+
+        <span class="cov8" title="1">killCopy.Sort(func(a *orderedMap.Pair, b *orderedMap.Pair) bool</span><span class="cov8" title="1">{
+                return a.Value().(int) &gt; b.Value().(int)
+        }</span>)
+
+        <span class="cov8" title="1">for index, rankedPlayer := range killCopy.Keys() </span><span class="cov8" title="1">{
+                rankedPlayers.Set(strconv.Itoa(index + 1), rankedPlayer)
+        }</span>
+
+        <span class="cov8" title="1">return rankedPlayers</span>
+}
+
+</pre>
+		
+		<pre class="file" id="file5" style="display: none">// Package cw_logParser is the package responsible by parse all log string information to solid types
+// offering useful structures to achieve this goal
+package cw_logParser
+
+import (
+        cw_error "cloudwalk-assessment/cw-error"
+        quake3 "cloudwalk-assessment/quake3"
+        "fmt"
+        "regexp"
+        "strconv"
+        "strings"
+)
+
+const prefixRegexp string = `(?i)(?&lt;prefix&gt;\d{1,2}:\d{2} )`
+
+// keywordRegex will be instantiated only here to improve performance
+var keywordRegex = regexp.MustCompile(prefixRegexp + `(?&lt;keyword&gt;[^:]*:)`)
+var killKeywordRegex = regexp.MustCompile(prefixRegexp + `(?&lt;keyword&gt;`+ string(SK_Kill) + ` )(?&lt;data&gt;((\d{1,4} ?){3}))`)
+var playerKeywordRegex = regexp.MustCompile(prefixRegexp + `(?&lt;keyword&gt;`+ string(SK_ClientUserinfoChanged) + ` )(?&lt;info&gt;\d* n\\[^\\t]*)`)
+
+//Interface ILogParser defines all methods offered by log parser
+type ILogParser interface {
+        Parse(logString string) (Log, error);
+}
+
+// Struct LogParser is used as ILogParser interface implementation
+type LogParser struct {
+        errorHandler cw_error.IErrorHandler
+}
+
+func CreateLogParser(errorHandler cw_error.IErrorHandler) *LogParser <span class="cov8" title="1">{
+        return &amp;LogParser{
+                errorHandler: errorHandler,
+        }
+}</span>
+
+// Struct Log is used as ILogParser interface implementation
+type Log struct {
+        Matches []Match;
+}
+
+// Match is the struct that defines the useful information about each match in the log
+type Match struct {
+        Order int
+        Players map[int]Player
+        Kills []Kill
+}
+
+// Player is the struct that defines the useful information about the player during a match
+type Player struct {
+        Name string 
+}
+
+// Kill is the struct that defines the useful information about each kill log entry that occurs during a match
+type Kill struct {
+        KillerId int
+        KilledId int
+        MeanOfDeath quake3.MeanOfDeath
+}
+
+// searchingKeywords defines the required keywords that should be found in the match log and that will scope
+// the log parser objects
+type searchingKeywords string
+const(
+        SK_InitGame searchingKeywords = "initgame:"
+        SK_ClientUserinfoChanged searchingKeywords = "clientuserinfochanged:"
+        SK_Kill searchingKeywords = "kill:"
+)
+
+// ParseLog is the function that retrieve log info and parse it to log parser types
+func (logParser *LogParser) Parse(logString string) (Log, error) <span class="cov8" title="1">{
+        matches := make([]Match, 0)
+        trimmedLogString := strings.TrimSpace(logString)
+        lines := strings.SplitN(trimmedLogString, "\n", -1)
+        errors := make([]error, 0)
+
+        isValid, err := validate(logString)
+
+        if(isValid) </span><span class="cov8" title="1">{
+                for index, line := range lines</span><span class="cov8" title="1">{
+                        hasKeyword, keyword := findKeyword(line)
+                        if(hasKeyword)</span><span class="cov8" title="1">{
+                                        switch op := keyword; strings.ToLower(op) </span>{
+                                                case string(SK_InitGame):<span class="cov8" title="1"> </span><span class="cov8" title="1">{
+                                                        currentMatch := Match{
+                                                                Order: len(matches) + 1,
+                                                                Players: make(map[int]Player, 0),
+                                                                Kills: make([]Kill, 0),
+                                                        }
+                                                        matches = append(matches, currentMatch)
+                                                }</span>
+                                                case string(SK_ClientUserinfoChanged):<span class="cov8" title="1"> </span><span class="cov8" title="1">{
+                                                        if(len(matches) &gt; 0)</span><span class="cov8" title="1">{
+                                                                exists, player, playerId, playerErr := logParser.parsePlayerLine(line)
+
+                                                                if(exists) </span><span class="cov8" title="1">{
+                                                                        matches[len(matches)-1].Players[playerId] = player
+                                                                }</span> else<span class="cov8" title="1"> {
+                                                                        errors = append(errors, fmt.Errorf("line %s: %s", strconv.Itoa(index), playerErr.Error()))
+                                                                }</span>
+                                                        }
+                                                }
+                                                case string(SK_Kill):<span class="cov8" title="1"> </span><span class="cov8" title="1">{
+                                                        if(len(matches) &gt; 0)</span><span class="cov8" title="1">{
+                                                                exists, kill, killErr := logParser.parseKillLine(line)
+
+                                                                if(exists) </span><span class="cov8" title="1">{
+                                                                        matches[len(matches)-1].Kills = append(matches[len(matches)-1].Kills, kill)
+                                                                }</span> else<span class="cov8" title="1"> {
+                                                                        errors = append(errors, fmt.Errorf("line %s: %s", strconv.Itoa(index), killErr.Error()))
+                                                                }</span>
+                                                        }
+                                                }
+                                                default:<span class="cov0" title="0"> continue</span>; 
+                                        }
+                        }
+                }
+        } else<span class="cov8" title="1"> {
+                err = logParser.errorHandler.BuildErrorOutput(errors...)
+        }</span>
+
+        <span class="cov8" title="1">parsedLog := Log {
+                Matches: matches,
+        }
+
+        return  parsedLog, err</span>
+}
+
+//Func validate makes a basic input validation
+// The parameter logString receives the string containing log
+//
+// Returns a bool sinalizing if input is valid or not and error variable
+func validate(logString string) (bool, error) <span class="cov8" title="1">{
+        var err error
+
+        if(len(logString) == 0)</span><span class="cov8" title="1">{
+                err = fmt.Errorf("log content is empty")
+                return false, err
+        }</span>
+                
+        <span class="cov8" title="1">return true, err</span>
+}
+
+// Func findKeyword searches inside a log line if words of interest whether present or not
+// Regexp here wouldn't be the most efficient process to find keywords, but for this assessment 
+// I've decided that should be interesting show the usage of regex 😃
+// The parameter line receives a log line
+//
+// Returns true if word of interest was found and the keyword, otherwise false and empty string
+func findKeyword(line string) (bool, string) <span class="cov8" title="1">{
+        match := keywordRegex.FindStringSubmatch(line)
+        contains := false
+        keyword := ""
+        if(len(match) &gt; 1 &amp;&amp; keywordRegex.SubexpIndex("keyword") &gt; -1)</span><span class="cov8" title="1">{
+                contains = true
+                keyword = match[keywordRegex.SubexpIndex("keyword")]
+        }</span> 
+
+        <span class="cov8" title="1">return contains, keyword</span>
+}
+
+func findSubgroupRegex(line string, regexp *regexp.Regexp, matchIndex int) (bool, string) <span class="cov8" title="1">{
+        match := regexp.FindStringSubmatch(line)
+        contains := false
+        keyword := ""
+
+        if(len(match) &gt;= matchIndex)</span><span class="cov8" title="1">{
+                contains = true
+                keyword = match[matchIndex]
+        }</span> 
+
+        <span class="cov8" title="1">return contains, keyword</span>
+}
+
+// Func parsePlayerLine is used to parse a log line that defines a player to the Player struct
+// The parameter line is a log line
+//
+// Returns a tuple where the first item is the Player struct and the second is an int containing player id
+func (logParser *LogParser) parsePlayerLine(line string) (bool, Player, int, error) <span class="cov8" title="1">{
+
+        var player Player
+        var playerId int
+        var err error
+        
+        exists, data := findSubgroupRegex(line, playerKeywordRegex, 3)
+        before, after, _ := strings.Cut(data, "n\\")
+
+
+        if(exists) </span><span class="cov8" title="1">{
+                playerId, _ = strconv.Atoi(strings.TrimSpace(before))
+
+                player = Player {
+                        Name: after,
+                }
+        }</span> else<span class="cov8" title="1">{
+                err = fmt.Errorf("not well formed player log line: %q", line)
+        }</span>
+
+        <span class="cov8" title="1">return exists, player, playerId, err</span>;        
+}
+
+// Func parseKillLine is used to parse a log line that defines a kill to the Kill struct
+// The parameter line is a log line
+//
+// Returns a Kill struct containing all required kill data
+func (logParser *LogParser) parseKillLine(line string) (bool, Kill, error) <span class="cov8" title="1">{
+        var kill Kill
+        var err error
+
+        exists, data := findSubgroupRegex(line, killKeywordRegex, 3)
+
+        if(!exists)</span><span class="cov8" title="1">{
+                err = fmt.Errorf("not well formed Kill log line: %q", line)
+        }</span> else<span class="cov8" title="1"> {
+                infos := strings.Split(strings.TrimSpace(data), " ")
+                killerId, killerErr := strconv.Atoi(infos[0])
+                killedId, killedErr := strconv.Atoi(infos[1])
+                meanOfDeath, modErr := strconv.Atoi(infos[2])
+
+                err = logParser.errorHandler.BuildErrorOutput(killerErr, killedErr, modErr)
+
+                if(err == nil) </span><span class="cov8" title="1">{
+                        kill = Kill{
+                                KillerId: killerId,
+                                MeanOfDeath: quake3.MeanOfDeath(meanOfDeath),
+                                KilledId: killedId,
+                        }
+                }</span>
+        }
+
+        <span class="cov8" title="1">return exists, kill, err</span>;
+}</pre>
+		
+		<pre class="file" id="file6" style="display: none">// Package cw_logReader is the package responsible for gather all log information and provide it to the application
+package cw_logReader
+
+import (
+        "fmt"
+        "log"
+        "os"
+)
+
+//Interface ILogReader defines all methods offered by log reader
+type ILogReader interface {
+        GetLog() (string, error);
+}
+
+// Struct LogReader is used as ILogReader interface implementation
+type LogReader struct {
+
+}
+
+// defines the place where log file is located in local machine
+const filepath string = `assets\qgames.log.txt`;
+
+// stores value of single instance of singleStringLog
+var stringLogSingleton *singleStringLog
+
+// singleStringLog is used to store the string log during application execution to save memory consumption
+type singleStringLog struct {
+        stringLog string
+}
+
+//Func GetLog provides the string log of the application
+// 
+// Returns the string containing log and error
+func (logReader *LogReader) GetLog() (string, error) <span class="cov0" title="0">{
+        logObject, err := getInstance() 
+        return logObject.stringLog, err
+}</span>
+
+// Func getInstance try to retrieve the instance of singleStringLog. 
+// If it's null, retrieves the log from file and store it, if not null, returns the current instance
+//
+// Returns singleStringLog pointer with log string and error
+func getInstance() (*singleStringLog, error) <span class="cov0" title="0">{
+        var err error
+        if(stringLogSingleton == nil)</span><span class="cov0" title="0">{
+                logText, err := readLog()
+
+                if(err == nil) </span><span class="cov0" title="0">{
+                        stringLogSingleton = &amp;singleStringLog{
+                                stringLog: logText,
+                        }
+                }</span>
+        }
+
+        <span class="cov0" title="0">return stringLogSingleton, err</span>
+}
+
+// Func readLog gets all log information available in log source
+// Returns a string containing all log information and error
+func readLog() (string, error) <span class="cov0" title="0">{
+        body, err:= os.ReadFile(filepath)
+        if err != nil </span><span class="cov0" title="0">{
+                log.Fatalf("unable to read log file: %v", err)
+                err = fmt.Errorf("Problems during log file read operation.")
+        }</span>
+        <span class="cov0" title="0">return string(body), err</span>
+}</pre>
+		
+		<pre class="file" id="file7" style="display: none">// Package cw_reporter is responsible by provide all available reports over game log to final user
+// This package exposes all report types and interact with all other packages in order to encapsulate other application layers
+package cw_reporter
+
+import (
+        cw_error "cloudwalk-assessment/cw-error"
+        cw_logAgnalyzer "cloudwalk-assessment/cw-logAnalyzer"
+        cw_logParser "cloudwalk-assessment/cw-logParser"
+        cw_logReader "cloudwalk-assessment/cw-logReader"
+
+        orderedMap "github.com/iancoleman/orderedmap"
+)
+
+type ReportType string
+const (
+        GAME_REPORT ReportType = "game"
+        MOD_REPORT ReportType = "mod"
+)
+
+//Interface ILogReporter defines all methods offered by log reporter
+type ILogReporter interface {
+        GetGameReport(reportType ReportType) (IGameReport, error)
+}
+
+// Struct LogReporter is used as ILogReporter interface implementation
+type LogReporter struct {
+        logReader cw_logReader.ILogReader;
+        logParser cw_logParser.ILogParser;
+        logAnalyzer cw_logAgnalyzer.ILogAnalyzer;
+        errorHandler cw_error.IErrorHandler;
+}
+
+type GameReport struct {
+        Data orderedMap.OrderedMap
+}
+
+type MODGameReport struct {
+        Data orderedMap.OrderedMap
+}
+
+type IGameReport interface {
+        GetData() orderedMap.OrderedMap
+}
+
+func (gr GameReport) GetData() orderedMap.OrderedMap <span class="cov0" title="0">{
+        return gr.Data;
+}</span>
+
+func (mgr MODGameReport) GetData() orderedMap.OrderedMap <span class="cov0" title="0">{
+        return mgr.Data
+}</span>
+
+//Constructor for LogReporter
+func CreateLogReporter(
+        logReader cw_logReader.ILogReader,
+        logParser cw_logParser.ILogParser,
+        logAnalyzer cw_logAgnalyzer.ILogAnalyzer,
+        errorHandler cw_error.IErrorHandler) *LogReporter <span class="cov8" title="1">{
+                return &amp;LogReporter{
+                        logReader: logReader,
+                        logParser: logParser,
+                        logAnalyzer: logAnalyzer,
+                        errorHandler: errorHandler,
+                }
+}</span>
+
+// Func GetGameReport generates the basic game report as requested in CloudWalk Assessment item 3.2
+//
+// Returns a map where the key is the match number and the value is the match info
+func (logReporter *LogReporter) GetGameReport(reportType ReportType) (IGameReport, error) <span class="cov8" title="1">{
+        stringLog, readerErr := logReporter.logReader.GetLog()
+        parsedLog, parserErr := logReporter.logParser.Parse(stringLog)
+
+        var analyzedMatches IGameReport
+
+        if(readerErr == nil &amp;&amp; parserErr == nil) </span><span class="cov8" title="1">{
+                if reportType == GAME_REPORT </span><span class="cov8" title="1">{
+                        analyzedMatches = GameReport {
+                                Data: *logReporter.logAnalyzer.GetMatchesInfo(parsedLog),
+                        }
+                }</span> else<span class="cov8" title="1"> {
+                        analyzedMatches = MODGameReport{
+                                Data: *logReporter.logAnalyzer.GetMODMatchesInfo(parsedLog),
+                        }
+                }</span>
+        }
+
+        <span class="cov8" title="1">var aggregatedErrors = logReporter.errorHandler.BuildErrorOutput(readerErr, parserErr)
+
+        return  analyzedMatches, aggregatedErrors</span>
+}</pre>
+		
+		<pre class="file" id="file8" style="display: none">// Code generated by "stringer -type=MeanOfDeath"; DO NOT EDIT.
+
+package quake3
+
+import "strconv"
+
+func _() {
+        // An "invalid array index" compiler error signifies that the constant values have changed.
+        // Re-run the stringer command to generate them again.
+        var x [1]struct{}
+        _ = x[MOD_UNKNOWN-0]
+        _ = x[MOD_SHOTGUN-1]
+        _ = x[MOD_GAUNTLET-2]
+        _ = x[MOD_MACHINEGUN-3]
+        _ = x[MOD_GRENADE-4]
+        _ = x[MOD_GRENADE_SPLASH-5]
+        _ = x[MOD_ROCKET-6]
+        _ = x[MOD_ROCKET_SPLASH-7]
+        _ = x[MOD_PLASMA-8]
+        _ = x[MOD_PLASMA_SPLASH-9]
+        _ = x[MOD_RAILGUN-10]
+        _ = x[MOD_LIGHTNING-11]
+        _ = x[MOD_BFG-12]
+        _ = x[MOD_BFG_SPLASH-13]
+        _ = x[MOD_WATER-14]
+        _ = x[MOD_SLIME-15]
+        _ = x[MOD_LAVA-16]
+        _ = x[MOD_CRUSH-17]
+        _ = x[MOD_TELEFRAG-18]
+        _ = x[MOD_FALLING-19]
+        _ = x[MOD_SUICIDE-20]
+        _ = x[MOD_TARGET_LASER-21]
+        _ = x[MOD_TRIGGER_HURT-22]
+        _ = x[MOD_NAIL-23]
+        _ = x[MOD_CHAINGUN-24]
+        _ = x[MOD_PROXIMITY_MINE-25]
+        _ = x[MOD_KAMIKAZE-26]
+        _ = x[MOD_JUICED-27]
+        _ = x[MOD_GRAPPLE-28]
+}
+
+const _MeanOfDeath_name = "MOD_UNKNOWNMOD_SHOTGUNMOD_GAUNTLETMOD_MACHINEGUNMOD_GRENADEMOD_GRENADE_SPLASHMOD_ROCKETMOD_ROCKET_SPLASHMOD_PLASMAMOD_PLASMA_SPLASHMOD_RAILGUNMOD_LIGHTNINGMOD_BFGMOD_BFG_SPLASHMOD_WATERMOD_SLIMEMOD_LAVAMOD_CRUSHMOD_TELEFRAGMOD_FALLINGMOD_SUICIDEMOD_TARGET_LASERMOD_TRIGGER_HURTMOD_NAILMOD_CHAINGUNMOD_PROXIMITY_MINEMOD_KAMIKAZEMOD_JUICEDMOD_GRAPPLE"
+
+var _MeanOfDeath_index = [...]uint16{0, 11, 22, 34, 48, 59, 77, 87, 104, 114, 131, 142, 155, 162, 176, 185, 194, 202, 211, 223, 234, 245, 261, 277, 285, 297, 315, 327, 337, 348}
+
+func (i MeanOfDeath) String() string <span class="cov8" title="1">{
+        if i &lt; 0 || i &gt;= MeanOfDeath(len(_MeanOfDeath_index)-1) </span><span class="cov0" title="0">{
+                return "MeanOfDeath(" + strconv.FormatInt(int64(i), 10) + ")"
+        }</span>
+        <span class="cov8" title="1">return _MeanOfDeath_name[_MeanOfDeath_index[i]:_MeanOfDeath_index[i+1]]</span>
+}
+</pre>
+		
+		</div>
+	</body>
+	<script>
+	(function() {
+		var files = document.getElementById('files');
+		var visible;
+		files.addEventListener('change', onChange, false);
+		function select(part) {
+			if (visible)
+				visible.style.display = 'none';
+			visible = document.getElementById(part);
+			if (!visible)
+				return;
+			files.value = part;
+			visible.style.display = 'block';
+			location.hash = part;
+		}
+		function onChange() {
+			select(files.value);
+			window.scrollTo(0, 0);
+		}
+		if (location.hash != "") {
+			select(location.hash.substr(1));
+		}
+		if (!visible) {
+			select("file0");
+		}
+	})();
+	</script>
+</html>

@@ -27,7 +27,8 @@ Each package, constant, type and function inside the application have it's own c
 The pattern of documentation was gathered in [official Go Doc Comments page](https://tip.golang.org/doc/comment).
 
 ### 🗃️ Backlog
-- **Unit Tests**: Due the time limit for this exercise, I couldn't do more than create the empty ut's files. I understand the great importance of this phase of development process and even know that there is some design methods that starts from it (TDD), and in a normal routine it would be done and probably with an reasonably threshold about 80% of coverage. I have splitted, as well, the application in several packages with reduce number of lines to become this task as smoothly as it could be.
+- **Unit Tests**: Using testify I could develop a considering number of UTs, but only basic ones. The general code coverage is over 80%, but I couldn't test all possible edge cases due the considering learning curve about Go and it's UTs. The report about coverage can be found in `coverage` folder inside solution and the report was generated using the command `go test -coverprofile coverage/cover.out -v ./... && go tool cover -html coverage/cover.out -o coverage/cover.html
+`.
 
 ## 🕹️ About the game rules
 Here we will talk about some game rules stuff
