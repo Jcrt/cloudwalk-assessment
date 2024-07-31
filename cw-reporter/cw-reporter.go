@@ -73,13 +73,15 @@ func (logReporter *LogReporter) GetGameReport(reportType ReportType) (IGameRepor
 
 	var analyzedMatches IGameReport
 
-	if reportType == GAME_REPORT {
-		analyzedMatches = GameReport {
-			Data: logReporter.logAnalyzer.GetMatchesInfo(parsedLog),
-		}
-	} else {
-		analyzedMatches = MODGameReport{
-			Data: logReporter.logAnalyzer.GetMODMatchesInfo(parsedLog),
+	if(readerErr == nil && parserErr == nil) {
+		if reportType == GAME_REPORT {
+			analyzedMatches = GameReport {
+				Data: *logReporter.logAnalyzer.GetMatchesInfo(parsedLog),
+			}
+		} else {
+			analyzedMatches = MODGameReport{
+				Data: *logReporter.logAnalyzer.GetMODMatchesInfo(parsedLog),
+			}
 		}
 	}
 
