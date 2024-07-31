@@ -116,7 +116,6 @@ func (logParser *LogParser) Parse(logString string) (Log, error) {
 			}
 		}
 	} else {
-
 		err = logParser.errorHandler.BuildErrorOutput(errors...)
 	}
 

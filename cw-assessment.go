@@ -34,7 +34,8 @@ func main() {
 		if(err != nil){
 			fmt.Printf("%s", err.Error())
 		} else {
-			fmt.Printf("%s", jsonParser.Parse2Json(gameReport))
+			output, _ := jsonParser.Parse2Json(gameReport)
+			fmt.Printf("%s", output)
 		}
 	}
 }
