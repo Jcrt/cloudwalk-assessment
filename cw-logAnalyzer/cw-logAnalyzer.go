@@ -16,8 +16,8 @@ const worldKillerId int = 1022
 
 //Interface ILogAnalyzer defines all methods offered by log analyzer
 type ILogAnalyzer interface {
-	GetMatchesInfo(parsedLog cw_logParser.Log) orderedMap.OrderedMap;
-	GetMODMatchesInfo(parsedLog cw_logParser.Log) orderedMap.OrderedMap;
+	GetMatchesInfo(parsedLog cw_logParser.Log) *orderedMap.OrderedMap;
+	GetMODMatchesInfo(parsedLog cw_logParser.Log) *orderedMap.OrderedMap;
 }
 
 // Struct LogAnalyzer is used as ILogAnalyzer interface implementation
@@ -42,7 +42,7 @@ type MODMatchInfo struct {
 // The parameter games receives an array of game log parser object
 //
 // Returns an OrderedMap containing all matches
-func (logAnalyzer *LogAnalyzer) GetMatchesInfo(parsedLog cw_logParser.Log) orderedMap.OrderedMap {
+func (logAnalyzer *LogAnalyzer) GetMatchesInfo(parsedLog cw_logParser.Log) *orderedMap.OrderedMap {
 	matchesInfo := orderedMap.New()
 
 	for index, match := range parsedLog.Matches {
@@ -50,21 +50,21 @@ func (logAnalyzer *LogAnalyzer) GetMatchesInfo(parsedLog cw_logParser.Log) order
 		currentMatch := MatchInfo {
 			Players: getPlayerNames(match.Players),
 			TotalKills: getTotalKills(match.Kills),
-			Kills: kills,
-			Ranking: getRankingByKills(kills),
+			Kills: *kills,
+			Ranking: *getRankingByKills(kills),
 		}
 		index := getMatchIdentifier(index)
 		matchesInfo.Set(index, currentMatch)
 	}
 
-	return *matchesInfo;
+	return matchesInfo;
 }
 
 // Func GetMODMatchesInfo build a map for each mean of death that occurred in logs, group it and count it
 // The parameter games receives an array of game log parser object
 //
 // Returns an OrderedMap containing all means of death grouped and counted
-func (logAnalyzer *LogAnalyzer) GetMODMatchesInfo(parsedLog cw_logParser.Log) orderedMap.OrderedMap {
+func (logAnalyzer *LogAnalyzer) GetMODMatchesInfo(parsedLog cw_logParser.Log) *orderedMap.OrderedMap {
 	modMatchesInfo := orderedMap.New()
 	for index, match := range parsedLog.Matches {
 		currentMODMatch := MODMatchInfo {
@@ -72,7 +72,7 @@ func (logAnalyzer *LogAnalyzer) GetMODMatchesInfo(parsedLog cw_logParser.Log) or
 		}
 		modMatchesInfo.Set(getMatchIdentifier(index), currentMODMatch)
 	}	
-	return *modMatchesInfo
+	return modMatchesInfo
 }
 
 func getMatchIdentifier(matchNumber int) string {
@@ -123,7 +123,7 @@ func getTotalKills(matchKills []cw_logParser.Kill) int{
 // The parameter game is the Game struct
 //
 // Returns an OrderedMap where the key is the mean of kill and the value is an int as a counter of occurrences
-func getKillsByPlayer(match cw_logParser.Match) orderedMap.OrderedMap {
+func getKillsByPlayer(match cw_logParser.Match) *orderedMap.OrderedMap {
 	killsByPlayer := orderedMap.New()
 
 	for _, player := range match.Players {
@@ -146,7 +146,7 @@ func getKillsByPlayer(match cw_logParser.Match) orderedMap.OrderedMap {
 		}
 	}
 
-	return *killsByPlayer
+	return killsByPlayer
 }
 
 // Func getRankingByKills creates a copy of kills orderedMap and with it's data creates a new ranking list
@@ -157,7 +157,7 @@ func getKillsByPlayer(match cw_logParser.Match) orderedMap.OrderedMap {
 // OBS: In terms of performance, it's not good because I'm recreating a list and doubling the memory consumption
 // I only did it to clearly separate the concerns of the functions, but I could do this in one function that would
 // return both kills ordered and ranking 
-func getRankingByKills(kills orderedMap.OrderedMap) orderedMap.OrderedMap {
+func getRankingByKills(kills *orderedMap.OrderedMap) *orderedMap.OrderedMap {
 
 	rankedPlayers := orderedMap.New()
 	killCopy := orderedMap.New()
@@ -175,6 +175,6 @@ func getRankingByKills(kills orderedMap.OrderedMap) orderedMap.OrderedMap {
 		rankedPlayers.Set(strconv.Itoa(index + 1), rankedPlayer)
 	}
 
-	return *rankedPlayers
+	return rankedPlayers
 }
 
